@@ -2,13 +2,11 @@
   "name": "my-todo-app",
   "private": true,
   "homepage": "https://AtaanshAhlawat.github.io/To-Do",
-
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "predeploy": "npm run build",
-"deploy": "gh-pages -d dist",
-
+    "deploy": "gh-pages -d dist",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
