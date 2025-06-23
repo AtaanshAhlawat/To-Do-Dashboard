@@ -93,16 +93,33 @@ function App() {
   const blueShadow = "0 2px 12px #2563eb33"
 
   return (
-    <div className="main-bg" style={{ minHeight: "100vh", paddingBottom: 80, background: "#f5faff" }}>
-      <header className="greeting" style={{ justifyContent: "center", textAlign: "center" }}>
-        <span role="img" aria-label="wave" style={{ fontSize: 40, marginRight: 16 }}>👋</span>
-        <div>
-          <h2 style={{ fontSize: "2.8em", fontWeight: 800, marginBottom: 8, color: blue }}>Good morning</h2>
-          <p style={{ fontSize: "1.3em", color: "#3b3b3b" }}>Make every moment count.</p>
-        </div>
-      </header>
+    <div
+      className="main-bg"
+      style={{
+        minHeight: "100vh",
+        paddingBottom: 80,
+        background: "#f5faff",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",      // Center horizontally
+        justifyContent: "center"   // Center vertically
+      }}
+    >
+      {/* Remove or comment out the header if not needed */}
+      {/* <header>...</header> */}
 
-      <div className="center-content" style={{ alignItems: "center", marginTop: 24 }}>
+      <div
+        className="center-content"
+        style={{
+          alignItems: "center",
+          marginTop: 24,
+          width: "100%",
+          maxWidth: 900,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center"
+        }}
+      >
         <div className="progress-card" style={{
           margin: "0 auto 2em auto",
           textAlign: "center",
