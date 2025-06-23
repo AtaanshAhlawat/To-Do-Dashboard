@@ -97,27 +97,23 @@ function App() {
       className="main-bg"
       style={{
         minHeight: "100vh",
-        paddingBottom: 80,
+        minWidth: "100vw",
         background: "#f5faff",
         display: "flex",
-        flexDirection: "column",
-        alignItems: "center",      // Center horizontally
-        justifyContent: "center"   // Center vertically
+        alignItems: "center",
+        justifyContent: "center",
       }}
     >
-      {/* Remove or comment out the header if not needed */}
-      {/* <header>...</header> */}
-
       <div
         className="center-content"
         style={{
-          alignItems: "center",
-          marginTop: 24,
           width: "100%",
-          maxWidth: 900,
+          maxWidth: 500, // or 600/700 as you like
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center"
+          alignItems: "center",
+          justifyContent: "center",
+          margin: "0 auto",
         }}
       >
         <div className="progress-card" style={{
