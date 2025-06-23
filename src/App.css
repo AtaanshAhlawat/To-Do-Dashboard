@@ -419,3 +419,8 @@ input[type="text"]:focus {
 .close-btn:hover {
   color: #a259ff;
 }
+
+.todo-card.completed {
+  opacity: 0.7;
+  text-decoration: line-through;
+}
