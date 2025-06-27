@@ -86,30 +86,36 @@ function App() {
 
   useEffect(() => {
     if (showAdd) {
-      document.body.classList.add('modal-open');
+      document.body.style.overflow = 'hidden';
     } else {
-      document.body.classList.remove('modal-open');
+      document.body.style.overflow = 'unset';
     }
+    
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
   }, [showAdd]);
 
   return (
     <div className="main-bg" style={{
       minHeight: "100vh",
-      minWidth: "100vw",
+      width: "100%",
       background: "#f5faff",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
+      overflow: "hidden"
     }}>
       <div className="center-content" style={{
-        width: "100vw",
-        maxWidth: "100vw",
+        width: "100%",
+        maxWidth: "100%",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         margin: 0,
-        padding: 0,
+        padding: "0 1rem",
         boxSizing: "border-box"
       }}>
         <div className="progress-card" style={{
@@ -306,8 +312,8 @@ function App() {
           </div>
         ) : (
           <ul className="todo-list" style={{
-            width: "100vw",
-            maxWidth: "100vw",
+            width: "100%",
+            maxWidth: "100%",
             margin: 0,
             padding: 0,
             boxSizing: "border-box"
@@ -330,7 +336,7 @@ function App() {
                   minHeight: 80,
                   textAlign: "center",
                   width: "100%",
-                  maxWidth: "100vw",
+                  maxWidth: "100%",
                   boxSizing: "border-box"
                 }}
               >
@@ -416,10 +422,10 @@ function App() {
       {/* Floating Add Button */}
       <button className="fab" onClick={() => setShowAdd(true)} style={{
         position: "fixed",
-        right: "2.5em",
-        bottom: "2.5em",
-        width: 70,
-        height: 70,
+        right: "1.5rem",
+        bottom: "1.5rem",
+        width: 60,
+        height: 60,
         background: blueGradient,
         color: "#fff",
         border: "none",
@@ -428,51 +434,88 @@ function App() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontSize: "2.2em",
+        fontSize: "2em",
         cursor: "pointer",
         zIndex: 10
       }}>
-        <Plus size={44} />
+        <Plus size={36} />
       </button>
 
       {/* Add Task Modal */}
       {showAdd && (
-        <div className="modal-bg">
-          <div className="modal-card">
-            <h2 style={{ color: "#2563eb", fontSize: "2em", fontWeight: 700, textAlign: "center", marginBottom: "1em" }}>
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(24, 25, 43, 0.35)",
+          backdropFilter: "blur(6px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000,
+          padding: "1rem",
+          boxSizing: "border-box"
+        }}>
+          <div style={{
+            background: "#fff",
+            borderRadius: "1.5rem",
+            boxShadow: "0 8px 48px rgba(37, 99, 235, 0.2)",
+            padding: "1.5rem",
+            width: "100%",
+            maxWidth: "400px",
+            maxHeight: "90vh",
+            overflowY: "auto",
+            margin: "0 auto",
+            boxSizing: "border-box",
+            display: "flex",
+            flexDirection: "column",
+            gap: "1rem"
+          }}>
+            <h2 style={{ 
+              color: "#2563eb", 
+              fontSize: "1.5rem", 
+              fontWeight: 700, 
+              textAlign: "center", 
+              margin: 0 
+            }}>
               Add New Task
             </h2>
+            
             <input
               type="text"
               value={newTask}
               onChange={e => setNewTask(e.target.value)}
               placeholder="Task Name *"
               style={{
-                fontSize: "1.1em",
-                padding: "0.8em",
-                borderRadius: "14px",
+                fontSize: "1rem",
+                padding: "0.8rem",
+                borderRadius: "0.75rem",
                 border: "2px solid #2563eb",
-                marginBottom: "1em",
                 width: "100%",
                 boxSizing: "border-box"
               }}
             />
-            <div className="tag-btn-group" style={{ display: "flex", gap: "0.7em", marginBottom: "1em", flexWrap: "wrap", width: "100%" }}>
+            
+            <div style={{ 
+              display: "flex", 
+              gap: "0.5rem", 
+              flexWrap: "wrap",
+              width: "100%" 
+            }}>
               {tags.map(tag => (
                 <button
                   key={tag}
-                  className={selectedTag === tag ? "tag-btn selected" : "tag-btn"}
                   onClick={() => setSelectedTag(tag)}
                   style={{
                     fontWeight: 700,
-                    fontSize: "1em",
-                    padding: "0.5em 1.2em",
-                    borderRadius: "12px",
+                    fontSize: "0.9rem",
+                    padding: "0.5rem 1rem",
+                    borderRadius: "0.75rem",
                     border: selectedTag === tag ? "none" : "2px solid #2563eb",
                     background: selectedTag === tag ? "linear-gradient(90deg, #2563eb 60%, #3b82f6 100%)" : "#fff",
                     color: selectedTag === tag ? "#fff" : "#2563eb",
-                    boxShadow: selectedTag === tag ? "0 2px 8px #2563eb33" : "none",
-                    cursor: "pointer"
+                    boxShadow: selectedTag === tag ? "0 2px 8px rgba(37, 99, 235, 0.2)" : "none",
+                    cursor: "pointer",
+                    flex: "0 0 auto"
                   }}
                   type="button"
                 >
@@ -480,12 +523,11 @@ function App() {
                 </button>
               ))}
             </div>
-            <div className="tag-input-row" style={{
+            
+            <div style={{
               display: "flex",
-              gap: "0.7em",
-              marginBottom: "1em",
-              width: "100%",
-              flexWrap: "nowrap"
+              gap: "0.5rem",
+              width: "100%"
             }}>
               <input
                 type="text"
@@ -493,17 +535,16 @@ function App() {
                 onChange={e => setNewTag(e.target.value)}
                 placeholder="Add new tag"
                 style={{
-                  fontSize: "1em",
-                  padding: "0.5em 1em",
-                  borderRadius: "10px",
+                  fontSize: "0.9rem",
+                  padding: "0.5rem 0.75rem",
+                  borderRadius: "0.5rem",
                   border: "2px solid #2563eb",
-                  flex: "1 1 0",
+                  flex: 1,
                   minWidth: 0,
-                  maxWidth: "100%"
+                  boxSizing: "border-box"
                 }}
               />
               <button
-                className="tag-btn"
                 type="button"
                 onClick={() => {
                   if (newTag.trim() && !tags.includes(newTag.trim())) {
@@ -513,53 +554,58 @@ function App() {
                 }}
                 style={{
                   fontWeight: 700,
-                  fontSize: "1em",
-                  padding: "0.5em 1.2em",
-                  borderRadius: "12px",
+                  fontSize: "0.9rem",
+                  padding: "0.5rem 1rem",
+                  borderRadius: "0.5rem",
                   background: "linear-gradient(90deg, #2563eb 60%, #3b82f6 100%)",
                   color: "#fff",
                   border: "none",
                   cursor: "pointer",
-                  minWidth: 0,
-                  maxWidth: "40vw",
-                  flex: "0 1 auto",
-                  whiteSpace: "nowrap"
+                  whiteSpace: "nowrap",
+                  flex: "0 0 auto"
                 }}
               >
                 Add Tag
               </button>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "1em", marginTop: "1em" }}>
+            
+            <div style={{ 
+              display: "flex", 
+              alignItems: "center", 
+              gap: "1rem", 
+              justifyContent: "space-between",
+              flexWrap: "wrap"
+            }}>
               <button
-                className="create-btn"
                 style={{
                   fontWeight: 700,
-                  fontSize: "1.1em",
-                  padding: "0.7em 2em",
-                  borderRadius: "12px",
+                  fontSize: "1rem",
+                  padding: "0.75rem 1.5rem",
+                  borderRadius: "0.75rem",
                   background: "linear-gradient(90deg, #2563eb 60%, #3b82f6 100%)",
                   color: "#fff",
                   border: "none",
-                  boxShadow: "0 2px 8px #2563eb33",
-                  cursor: "pointer"
+                  boxShadow: "0 2px 8px rgba(37, 99, 235, 0.2)",
+                  cursor: "pointer",
+                  flex: 1
                 }}
                 onClick={addTask}
               >
                 Create Task
               </button>
               <button
-                className="close-btn"
                 style={{
                   background: "none",
                   border: "none",
                   color: "#2563eb",
-                  fontSize: "1em",
+                  fontSize: "1rem",
                   fontWeight: 700,
-                  cursor: "pointer"
+                  cursor: "pointer",
+                  padding: "0.75rem"
                 }}
                 onClick={() => setShowAdd(false)}
               >
-                &#10005; Close
+                ✕ Close
               </button>
             </div>
           </div>
