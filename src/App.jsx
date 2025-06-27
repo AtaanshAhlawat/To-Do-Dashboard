@@ -90,8 +90,6 @@ function App() {
     } else {
       document.body.style.overflow = 'unset';
     }
-    
-    // Cleanup on unmount
     return () => {
       document.body.style.overflow = 'unset';
     };
@@ -103,18 +101,18 @@ function App() {
       width: "100%",
       background: "#f5faff",
       display: "flex",
-      alignItems: "center",
+      alignItems: "flex-start",
       justifyContent: "center",
       overflow: "hidden"
     }}>
       <div className="center-content" style={{
         width: "100%",
-        maxWidth: "100%",
+        maxWidth: 600,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "center",
-        margin: 0,
+        justifyContent: "flex-start",
+        margin: "2rem auto",
         padding: "0 1rem",
         boxSizing: "border-box"
       }}>
@@ -198,7 +196,9 @@ function App() {
           boxShadow: blueShadow
         }}>
           <User size={26} style={{ marginRight: 10 }} />
-          Personal ({filtered.length})
+          {tagFilter === 'All Tags'
+            ? `All Tasks (${filtered.length})`
+            : `${tagFilter} (${filtered.length})`}
         </div>
 
         <div style={{
@@ -313,7 +313,7 @@ function App() {
         ) : (
           <ul className="todo-list" style={{
             width: "100%",
-            maxWidth: "100%",
+            maxWidth: 600,
             margin: 0,
             padding: 0,
             boxSizing: "border-box"
@@ -336,7 +336,7 @@ function App() {
                   minHeight: 80,
                   textAlign: "center",
                   width: "100%",
-                  maxWidth: "100%",
+                  maxWidth: 600,
                   boxSizing: "border-box"
                 }}
               >
