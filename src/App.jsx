@@ -480,7 +480,13 @@ function App() {
                 </button>
               ))}
             </div>
-            <div className="tag-input-row" style={{ display: "flex", gap: "0.7em", marginBottom: "1em", width: "100%" }}>
+            <div className="tag-input-row" style={{
+              display: "flex",
+              gap: "0.7em",
+              marginBottom: "1em",
+              width: "100%",
+              flexWrap: "nowrap"
+            }}>
               <input
                 type="text"
                 value={newTag}
@@ -491,8 +497,9 @@ function App() {
                   padding: "0.5em 1em",
                   borderRadius: "10px",
                   border: "2px solid #2563eb",
-                  flex: 1,
-                  minWidth: 0
+                  flex: "1 1 0",
+                  minWidth: 0,
+                  maxWidth: "100%"
                 }}
               />
               <button
@@ -513,7 +520,10 @@ function App() {
                   color: "#fff",
                   border: "none",
                   cursor: "pointer",
-                  minWidth: 0
+                  minWidth: 0,
+                  maxWidth: "40vw",
+                  flex: "0 1 auto",
+                  whiteSpace: "nowrap"
                 }}
               >
                 Add Tag

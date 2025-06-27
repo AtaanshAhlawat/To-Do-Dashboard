@@ -1,7 +1,7 @@
 body, html, #root, .main-bg {
   min-height: 100vh;
-  width: 100vw;
-  max-width: 100vw;
+  width: 100%;
+  max-width: 100%;
   overflow-x: hidden;
   background: #f5f6fa;
   font-family: 'Poppins', 'Inter', Arial, sans-serif;
@@ -375,12 +375,12 @@ input[type="text"]:focus {
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  width: 100vw;
+  width: 100%;
   height: 100vh;
   overflow: hidden;
 }
 
-/* Modal card: always centered, never wider than viewport */
+/* --- Modal card: always centered, never wider than viewport --- */
 .modal-card {
   background: #fff;
   border-radius: 6vw;
@@ -388,7 +388,7 @@ input[type="text"]:focus {
   padding: clamp(1em, 5vw, 2.5em);
   width: 100%;
   max-width: 420px;
-  min-width: 0;
+  margin: 0 auto;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -398,16 +398,17 @@ input[type="text"]:focus {
   overflow: hidden;
 }
 
-/* Modal: prevent horizontal overflow on mobile */
+/* --- On mobile, use width: 100% and max-width: 98vw, not 100vw --- */
 @media (max-width: 600px) {
   .modal-card {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    min-width: 0 !important;
-    box-sizing: border-box !important;
-    padding-left: 2vw !important;
-    padding-right: 2vw !important;
-    overflow-x: hidden !important;
+    width: 100%;
+    max-width: 98vw;
+    min-width: 0;
+    margin: 0 auto;
+    padding-left: 2vw;
+    padding-right: 2vw;
+    box-sizing: border-box;
+    overflow-x: hidden;
   }
   .modal-card > * {
     min-width: 0 !important;
@@ -421,22 +422,9 @@ input[type="text"]:focus {
     min-width: 0 !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-    flex: 1 1 0 !important;
   }
   .modal-card .tag-btn {
     white-space: nowrap;
-  }
-  .modal-card .tag-btn,
-  .modal-card .create-btn,
-  .modal-card .close-btn {
-    width: 100%;
-  }
-  .modal-card .tag-btn,
-  .modal-card .create-btn {
-    margin-bottom: 0.5em;
-  }
-  .modal-card .tag-btn:last-child {
-    margin-bottom: 0;
   }
   .modal-card .tag-btn-group,
   .modal-card .tag-input-row {
@@ -445,53 +433,26 @@ input[type="text"]:focus {
     gap: 0.5em;
     width: 100%;
   }
-}
-
-/* Responsive: modal adapts to any device */
-@media (max-width: 600px) {
-  .modal-card, .todo-card, .progress-card {
-    max-width: 98vw !important;
-    border-radius: 4vw !important;
-    padding: clamp(0.7em, 4vw, 1.2em) !important;
-    font-size: clamp(0.95em, 3vw, 1.1em) !important;
+  .modal-card .tag-input-row {
+    flex-wrap: nowrap;
   }
-  .center-content, .todo-list {
-    padding: 0 1vw !important;
-  }
-}
-
-/* Remove all fixed max-widths and paddings on mobile */
-@media (max-width: 600px) {
-  html, body, #root, .main-bg, .center-content, .progress-card, .todo-list, .todo-card, .modal-card {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    min-width: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    box-sizing: border-box !important;
-    overflow-x: hidden !important;
-  }
-  .filter-row,
-  .category-label,
-  .progress-card,
-  .todo-card,
-  .modal-card {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    min-width: 0 !important;
-    margin: 0 !important;
-    padding-left: 2vw !important;
-    padding-right: 2vw !important;
-    box-sizing: border-box !important;
-  }
-  .filter-row > * {
+  .modal-card .tag-input-row input {
     flex: 1 1 0;
     min-width: 0;
     max-width: 100%;
   }
+  .modal-card .tag-input-row .tag-btn {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 40vw;
+    white-space: nowrap;
+  }
 }
 
-/* Always prevent horizontal scroll */
+/* --- Remove conflicting modal-card mobile rules --- */
+/* Delete or comment out any other @media (max-width: 600px) .modal-card rules that use width: 100vw or max-width: 100vw */
+
+/* --- Always prevent horizontal scroll --- */
 html, body, #root {
   overflow-x: hidden !important;
 }
