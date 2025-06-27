@@ -14,14 +14,7 @@ function App() {
   const [newTag, setNewTag] = useState('')
   const [tagFilter, setTagFilter] = useState('All Tags')
 
-  useEffect(() => {
-    const saved = localStorage.getItem('todoTasks')
-    if (saved) setTasks(JSON.parse(saved))
-  }, [])
-
-  useEffect(() => {
-    localStorage.setItem('todoTasks', JSON.stringify(tasks))
-  }, [tasks])
+  // No sample tasks, start empty
 
   const addTask = () => {
     if (!newTask.trim()) return
@@ -96,266 +89,238 @@ function App() {
   }, [showAdd]);
 
   return (
-    <div className="main-bg" style={{
+    <div style={{
       minHeight: "100vh",
-      width: "100%",
+      width: "100vw",
       background: "#f5faff",
+      padding: "2rem 1rem",
+      boxSizing: "border-box",
       display: "flex",
-      alignItems: "flex-start",
       justifyContent: "center",
-      overflow: "hidden"
+      alignItems: "flex-start"
     }}>
-      <div className="center-content" style={{
+      <div style={{
         width: "100%",
-        maxWidth: 600,
+        maxWidth: "min(1200px, 90vw)",
+        margin: "0 auto",
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "flex-start",
-        margin: "2rem auto",
-        padding: "0 1rem",
-        boxSizing: "border-box"
+        gap: "2rem"
       }}>
-        <div className="progress-card" style={{
-          margin: "0 auto 2em auto",
-          textAlign: "center",
-          background: "#fff",
-          border: `2px solid ${blue}`,
-          borderRadius: 28,
-          boxShadow: blueShadow,
-          width: "100%",
-          maxWidth: 420,
-          minWidth: 0,
-          boxSizing: "border-box"
+        {/* Header Section */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+          gap: "2rem",
+          alignItems: "start"
         }}>
-          <div className="progress-circle" style={{
-            margin: "0 auto 1em auto",
-            width: 80,
-            height: 80,
-            fontSize: "1.5em",
-            background: "#e0edff",
-            color: blue,
-            border: `2px solid ${blueLight}`,
+          {/* Progress Card */}
+          <div style={{
+            background: "#fff",
+            border: `2px solid ${blue}`,
+            borderRadius: "1.5rem",
+            boxShadow: blueShadow,
+            padding: "2rem",
+            textAlign: "center",
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
-            justifyContent: "center",
-            borderRadius: "50%",
-            fontWeight: 700
+            gap: "1rem"
           }}>
-            <span>{tagPercent}%</span>
-          </div>
-          <div>
-            <b style={{ fontSize: "1.3em", color: blue }}>
-              {tagFilter === 'All Tags'
-                ? `You have ${tagActive} task${tagActive !== 1 ? 's' : ''} to complete.`
-                : `You have ${tagActive} ${tagFilter} task${tagActive !== 1 ? 's' : ''} to complete.`}
-            </b>
-            <div style={{ color: "#3b3b3b", fontSize: "1.1em", marginTop: 4 }}>
-              {tagComplete === 0
-                ? "No tasks completed yet. Keep going!"
-                : `${tagComplete} completed! Great job!`}
+            <div style={{
+              width: 100,
+              height: 100,
+              fontSize: "1.8rem",
+              background: "#e0edff",
+              color: blue,
+              border: `3px solid ${blueLight}`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: "50%",
+              fontWeight: 700
+            }}>
+              <span>{tagPercent}%</span>
+            </div>
+            <div>
+              <div style={{ fontSize: "1.4rem", fontWeight: 700, color: blue, marginBottom: "0.5rem" }}>
+                {tagFilter === 'All Tags'
+                  ? `You have ${tagActive} task${tagActive !== 1 ? 's' : ''} to complete.`
+                  : `You have ${tagActive} ${tagFilter} task${tagActive !== 1 ? 's' : ''} to complete.`}
+              </div>
+              <div style={{ color: "#666", fontSize: "1.1rem" }}>
+                {tagComplete === 0
+                  ? "No tasks completed yet. Keep going!"
+                  : `${tagComplete} completed! Great job!`}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="search-row" style={{
-          justifyContent: "center",
-          marginBottom: 24,
-          width: "100%",
-          maxWidth: 420,
-          boxSizing: "border-box"
-        }}>
-          <input
-            className="search-input"
-            type="text"
-            placeholder="Search for task..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            style={{
-              fontSize: "1.3em",
-              padding: "1.2em 1.7em",
-              borderRadius: 22,
-              width: "100%",
-              border: `2px solid ${blueLight}`,
-              background: "#fff",
-              boxSizing: "border-box"
-            }}
-          />
-        </div>
+          {/* Controls Section */}
+          <div style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "1.5rem"
+          }}>
+            {/* Search */}
+            <input
+              type="text"
+              placeholder="Search for task..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{
+                fontSize: "1.2rem",
+                padding: "1rem 1.5rem",
+                borderRadius: "1rem",
+                width: "100%",
+                border: `2px solid ${blueLight}`,
+                background: "#fff",
+                boxSizing: "border-box"
+              }}
+            />
 
-        <div className="category-label" style={{
-          fontSize: "1.3em",
-          padding: "0.8em 2.2em",
-          borderRadius: 22,
-          margin: "0 auto 2em auto",
-          display: "inline-flex",
-          alignItems: "center",
-          background: "#e0edff",
-          color: blue,
-          fontWeight: 700,
-          boxShadow: blueShadow
-        }}>
-          <User size={26} style={{ marginRight: 10 }} />
-          {tagFilter === 'All Tags'
-            ? `All Tasks (${filtered.length})`
-            : `${tagFilter} (${filtered.length})`}
-        </div>
-
-        <div style={{
-          display: "flex",
-          justifyContent: "center",
-          marginBottom: 24,
-          gap: 16,
-          width: "100%",
-          maxWidth: 420,
-          boxSizing: "border-box"
-        }}>
-          <select
-            value={tagFilter}
-            onChange={e => setTagFilter(e.target.value)}
-            style={{
-              fontSize: "1.1em",
-              padding: "0.7em 1.5em",
-              borderRadius: 16,
-              border: `2px solid ${blueLight}`,
-              background: "#fff",
+            {/* Category Label */}
+            <div style={{
+              fontSize: "1.2rem",
+              padding: "0.8rem 1.5rem",
+              borderRadius: "1rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "#e0edff",
               color: blue,
-              fontWeight: 600,
-              width: "100%",
-              boxSizing: "border-box"
-            }}
-          >
-            <option value="All Tags">All Tags</option>
-            {tags.map(tag => (
-              <option key={tag} value={tag}>{tag}</option>
-            ))}
-          </select>
+              fontWeight: 700,
+              boxShadow: blueShadow
+            }}>
+              <User size={24} style={{ marginRight: "0.5rem" }} />
+              {tagFilter === 'All Tags'
+                ? `All Tasks (${filtered.length})`
+                : `${tagFilter} (${filtered.length})`}
+            </div>
+
+            {/* Tag Filter */}
+            <select
+              value={tagFilter}
+              onChange={e => setTagFilter(e.target.value)}
+              style={{
+                fontSize: "1.1rem",
+                padding: "0.8rem 1.2rem",
+                borderRadius: "1rem",
+                border: `2px solid ${blueLight}`,
+                background: "#fff",
+                color: blue,
+                fontWeight: 600,
+                width: "100%",
+                boxSizing: "border-box"
+              }}
+            >
+              <option value="All Tags">All Tags</option>
+              {tags.map(tag => (
+                <option key={tag} value={tag}>{tag}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        {/* Filter Row */}
-        <div className="filter-row" style={{
+        {/* Filter Buttons */}
+        <div style={{
           display: 'flex',
-          gap: '1em',
+          gap: '1rem',
           justifyContent: "center",
-          margin: '2em 0 2.5em 0',
-          width: "100%",
-          maxWidth: 420,
-          boxSizing: "border-box",
           flexWrap: "wrap"
         }}>
-          <button
-            className={filter === 'all' ? 'filter-btn active' : 'filter-btn'}
-            onClick={() => setFilter('all')}
-            style={{
-              fontSize: "1.1em",
-              padding: "0.7em 1.2em",
-              borderRadius: 18,
-              fontWeight: 700,
-              background: filter === 'all' ? blueGradient : "#fff",
-              color: filter === 'all' ? "#fff" : blue,
-              border: `2px solid ${blue}`,
-              boxShadow: filter === 'all' ? blueShadow : "none",
-              transition: "all 0.2s",
-              flex: 1,
-              minWidth: 100,
-              maxWidth: "100%"
-            }}
-          >
-            All
-          </button>
-          <button
-            className={filter === 'active' ? 'filter-btn active' : 'filter-btn'}
-            onClick={() => setFilter('active')}
-            style={{
-              fontSize: "1.1em",
-              padding: "0.7em 1.2em",
-              borderRadius: 18,
-              fontWeight: 700,
-              background: filter === 'active' ? blueGradient : "#fff",
-              color: filter === 'active' ? "#fff" : blue,
-              border: `2px solid ${blue}`,
-              boxShadow: filter === 'active' ? blueShadow : "none",
-              transition: "all 0.2s",
-              flex: 1,
-              minWidth: 100,
-              maxWidth: "100%"
-            }}
-          >
-            Pending
-          </button>
-          <button
-            className={filter === 'completed' ? 'filter-btn active' : 'filter-btn'}
-            onClick={() => setFilter('completed')}
-            style={{
-              fontSize: "1.1em",
-              padding: "0.7em 1.2em",
-              borderRadius: 18,
-              fontWeight: 700,
-              background: filter === 'completed' ? blueGradient : "#fff",
-              color: filter === 'completed' ? "#fff" : blue,
-              border: `2px solid ${blue}`,
-              boxShadow: filter === 'completed' ? blueShadow : "none",
-              transition: "all 0.2s",
-              flex: 1,
-              minWidth: 100,
-              maxWidth: "100%"
-            }}
-          >
-            Completed
-          </button>
+          {['all', 'active', 'completed'].map((filterType) => (
+            <button
+              key={filterType}
+              onClick={() => setFilter(filterType)}
+              style={{
+                fontSize: "1.1rem",
+                padding: "0.8rem 2rem",
+                borderRadius: "1rem",
+                fontWeight: 700,
+                background: filter === filterType ? blueGradient : "#fff",
+                color: filter === filterType ? "#fff" : blue,
+                border: `2px solid ${blue}`,
+                boxShadow: filter === filterType ? blueShadow : "none",
+                transition: "all 0.2s",
+                minWidth: "120px"
+              }}
+            >
+              {filterType === 'all' ? 'All' : filterType === 'active' ? 'Pending' : 'Completed'}
+            </button>
+          ))}
         </div>
 
+        {/* Tasks Section */}
         {filtered.length === 0 ? (
-          <div className="empty-state" style={{ textAlign: "center", margin: "3em 0" }}>
-            <h3 style={{ fontSize: "1.3em", fontWeight: 700, color: blue }}>You don't have any tasks yet</h3>
-            <p style={{ color: "#3b3b3b", fontSize: "1.1em" }}>Click on the <b>+</b> button to add one</p>
+          <div style={{ 
+            textAlign: "center", 
+            margin: "4rem 0",
+            padding: "3rem",
+            background: "#fff",
+            borderRadius: "1.5rem",
+            boxShadow: "0 4px 24px rgba(0,0,0,0.05)"
+          }}>
+            <h3 style={{ fontSize: "1.8rem", fontWeight: 700, color: blue, marginBottom: "1rem" }}>
+              You don't have any tasks yet
+            </h3>
+            <p style={{ color: "#666", fontSize: "1.2rem" }}>
+              Click on the <strong>+</strong> button to add one
+            </p>
           </div>
         ) : (
-          <ul className="todo-list" style={{
-            width: "100%",
-            maxWidth: 600,
-            margin: 0,
-            padding: 0,
-            boxSizing: "border-box"
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))",
+            gap: "1.5rem",
+            width: "100%"
           }}>
             {filtered.map(task => (
-              <li
+              <div
                 key={task.id}
-                className={`todo-card${task.completed ? " completed" : ""}`}
                 style={{
                   background: blueGradient,
                   color: "#fff",
-                  borderRadius: 22,
-                  fontSize: "1.1em",
-                  marginBottom: 24,
-                  boxShadow: "0 8px 48px 0 #2563eb33",
+                  borderRadius: "1.5rem",
+                  fontSize: "1.1rem",
+                  boxShadow: "0 8px 32px rgba(37, 99, 235, 0.2)",
+                  padding: "1.5rem",
                   display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "1.2em 1.2em",
-                  minHeight: 80,
-                  textAlign: "center",
-                  width: "100%",
-                  maxWidth: 600,
-                  boxSizing: "border-box"
+                  flexDirection: "column",
+                  gap: "1rem",
+                  minHeight: "160px",
+                  position: "relative",
+                  transition: "transform 0.2s, box-shadow 0.2s"
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = "translateY(-2px)"
+                  e.currentTarget.style.boxShadow = "0 12px 40px rgba(37, 99, 235, 0.3)"
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = "translateY(0)"
+                  e.currentTarget.style.boxShadow = "0 8px 32px rgba(37, 99, 235, 0.2)"
                 }}
               >
-                <div style={{ display: "flex", flexDirection: "column", flex: 1, alignItems: "center" }}>
-                  <span style={{
-                    fontWeight: 700,
-                    fontSize: "1em",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.7em",
-                    justifyContent: "center"
-                  }}>
-                    <input
-                      type="checkbox"
-                      checked={task.completed}
-                      onChange={() => toggleTask(task.id)}
-                      style={{ accentColor: "#fff", width: 22, height: 22, marginRight: 10 }}
-                      title={task.completed ? "Mark as pending" : "Mark as completed"}
-                    />
+                {/* Task Header */}
+                <div style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "1rem"
+                }}>
+                  <input
+                    type="checkbox"
+                    checked={task.completed}
+                    onChange={() => toggleTask(task.id)}
+                    style={{ 
+                      accentColor: "#fff", 
+                      width: 20, 
+                      height: 20,
+                      marginTop: "2px",
+                      cursor: "pointer"
+                    }}
+                    title={task.completed ? "Mark as pending" : "Mark as completed"}
+                  />
+                  <div style={{ flex: 1 }}>
                     {editingId === task.id ? (
                       <input
                         type="text"
@@ -366,79 +331,178 @@ function App() {
                           else if (e.key === "Escape") cancelEdit()
                         }}
                         autoFocus
-                        style={{ fontSize: "1em", borderRadius: 10, border: "none", padding: 8, width: "60vw", maxWidth: 200 }}
+                        style={{ 
+                          fontSize: "1.1rem", 
+                          borderRadius: "0.5rem", 
+                          border: "none", 
+                          padding: "0.5rem",
+                          width: "100%",
+                          boxSizing: "border-box"
+                        }}
                       />
                     ) : (
-                      task.text
+                      <div style={{
+                        fontWeight: 700,
+                        fontSize: "1.2rem",
+                        lineHeight: 1.4,
+                        textDecoration: task.completed ? "line-through" : "none",
+                        opacity: task.completed ? 0.7 : 1
+                      }}>
+                        {task.text}
+                      </div>
                     )}
-                  </span>
-                  <div style={{ marginTop: 12 }}>
-                    <span className="category-chip" style={{
+                  </div>
+                </div>
+
+                {/* Task Footer */}
+                <div style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginTop: "auto"
+                }}>
+                  <div style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.5rem"
+                  }}>
+                    <span style={{
                       background: "#fff",
                       color: blue,
                       fontWeight: 700,
-                      borderRadius: 14,
-                      padding: "0.3em 1em",
-                      fontSize: "0.95em",
-                      boxShadow: "0 2px 8px #b6d3ff33",
-                      gap: "0.5em",
+                      borderRadius: "0.75rem",
+                      padding: "0.4rem 1rem",
+                      fontSize: "0.9rem",
                       display: "inline-flex",
-                      alignItems: "center"
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      width: "fit-content"
                     }}>
-                      <User size={16} /> {task.category}
+                      <User size={14} /> {task.category}
+                    </span>
+                    <span style={{ 
+                      fontSize: "0.9rem", 
+                      opacity: 0.8 
+                    }}>
+                      today {task.created}
                     </span>
                   </div>
-                </div>
-                <div style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-end",
-                  justifyContent: "space-between",
-                  minWidth: 80
-                }}>
-                  <span style={{ fontSize: "0.95em", opacity: 0.8, marginBottom: 10 }}>
-                    today {task.created}
-                  </span>
-                  <div style={{ display: "flex", gap: "0.5em" }}>
+                  
+                  <div style={{ 
+                    display: "flex", 
+                    gap: "0.5rem",
+                    alignItems: "center"
+                  }}>
                     {editingId === task.id ? (
                       <>
-                        <button className="icon-btn" onClick={saveEdit}><Check size={22} /></button>
-                        <button className="icon-btn" onClick={cancelEdit}><X size={22} /></button>
+                        <button 
+                          onClick={saveEdit}
+                          style={{
+                            background: "rgba(255,255,255,0.2)",
+                            border: "none",
+                            borderRadius: "0.5rem",
+                            padding: "0.5rem",
+                            color: "#fff",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+                          }}
+                        >
+                          <Check size={18} />
+                        </button>
+                        <button 
+                          onClick={cancelEdit}
+                          style={{
+                            background: "rgba(255,255,255,0.2)",
+                            border: "none",
+                            borderRadius: "0.5rem",
+                            padding: "0.5rem",
+                            color: "#fff",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+                          }}
+                        >
+                          <X size={18} />
+                        </button>
                       </>
                     ) : (
                       <>
-                        <button className="icon-btn" onClick={() => startEditing(task.id, task.text)}><Edit2 size={22} /></button>
-                        <button className="icon-btn" onClick={() => deleteTask(task.id)}><Trash2 size={22} /></button>
+                        <button 
+                          onClick={() => startEditing(task.id, task.text)}
+                          style={{
+                            background: "rgba(255,255,255,0.2)",
+                            border: "none",
+                            borderRadius: "0.5rem",
+                            padding: "0.5rem",
+                            color: "#fff",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+                          }}
+                        >
+                          <Edit2 size={18} />
+                        </button>
+                        <button 
+                          onClick={() => deleteTask(task.id)}
+                          style={{
+                            background: "rgba(255,255,255,0.2)",
+                            border: "none",
+                            borderRadius: "0.5rem",
+                            padding: "0.5rem",
+                            color: "#fff",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+                          }}
+                        >
+                          <Trash2 size={18} />
+                        </button>
                       </>
                     )}
                   </div>
                 </div>
-              </li>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </div>
 
       {/* Floating Add Button */}
-      <button className="fab" onClick={() => setShowAdd(true)} style={{
-        position: "fixed",
-        right: "1.5rem",
-        bottom: "1.5rem",
-        width: 60,
-        height: 60,
-        background: blueGradient,
-        color: "#fff",
-        border: "none",
-        borderRadius: "50%",
-        boxShadow: "0 4px 32px #2563eb33",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: "2em",
-        cursor: "pointer",
-        zIndex: 10
-      }}>
-        <Plus size={36} />
+      <button 
+        onClick={() => setShowAdd(true)} 
+        style={{
+          position: "fixed",
+          right: "2rem",
+          bottom: "2rem",
+          width: 64,
+          height: 64,
+          background: blueGradient,
+          color: "#fff",
+          border: "none",
+          borderRadius: "50%",
+          boxShadow: "0 8px 32px rgba(37, 99, 235, 0.3)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          zIndex: 10,
+          transition: "transform 0.2s, box-shadow 0.2s"
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.transform = "scale(1.1)"
+          e.currentTarget.style.boxShadow = "0 12px 40px rgba(37, 99, 235, 0.4)"
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.transform = "scale(1)"
+          e.currentTarget.style.boxShadow = "0 8px 32px rgba(37, 99, 235, 0.3)"
+        }}
+      >
+        <Plus size={32} />
       </button>
 
       {/* Add Task Modal */}
@@ -446,8 +510,8 @@ function App() {
         <div style={{
           position: "fixed",
           inset: 0,
-          background: "rgba(24, 25, 43, 0.35)",
-          backdropFilter: "blur(6px)",
+          background: "rgba(0, 0, 0, 0.5)",
+          backdropFilter: "blur(8px)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -458,21 +522,21 @@ function App() {
           <div style={{
             background: "#fff",
             borderRadius: "1.5rem",
-            boxShadow: "0 8px 48px rgba(37, 99, 235, 0.2)",
-            padding: "1.5rem",
+            boxShadow: "0 20px 80px rgba(0, 0, 0, 0.3)",
+            padding: "2rem",
             width: "100%",
-            maxWidth: "400px",
+            maxWidth: "500px",
             maxHeight: "90vh",
             overflowY: "auto",
             margin: "0 auto",
             boxSizing: "border-box",
             display: "flex",
             flexDirection: "column",
-            gap: "1rem"
+            gap: "1.5rem"
           }}>
             <h2 style={{ 
-              color: "#2563eb", 
-              fontSize: "1.5rem", 
+              color: blue, 
+              fontSize: "1.8rem", 
               fontWeight: 700, 
               textAlign: "center", 
               margin: 0 
@@ -486,10 +550,10 @@ function App() {
               onChange={e => setNewTask(e.target.value)}
               placeholder="Task Name *"
               style={{
-                fontSize: "1rem",
-                padding: "0.8rem",
-                borderRadius: "0.75rem",
-                border: "2px solid #2563eb",
+                fontSize: "1.1rem",
+                padding: "1rem",
+                borderRadius: "1rem",
+                border: `2px solid ${blue}`,
                 width: "100%",
                 boxSizing: "border-box"
               }}
@@ -497,7 +561,7 @@ function App() {
             
             <div style={{ 
               display: "flex", 
-              gap: "0.5rem", 
+              gap: "0.75rem", 
               flexWrap: "wrap",
               width: "100%" 
             }}>
@@ -507,15 +571,15 @@ function App() {
                   onClick={() => setSelectedTag(tag)}
                   style={{
                     fontWeight: 700,
-                    fontSize: "0.9rem",
-                    padding: "0.5rem 1rem",
-                    borderRadius: "0.75rem",
-                    border: selectedTag === tag ? "none" : "2px solid #2563eb",
-                    background: selectedTag === tag ? "linear-gradient(90deg, #2563eb 60%, #3b82f6 100%)" : "#fff",
-                    color: selectedTag === tag ? "#fff" : "#2563eb",
-                    boxShadow: selectedTag === tag ? "0 2px 8px rgba(37, 99, 235, 0.2)" : "none",
+                    fontSize: "1rem",
+                    padding: "0.75rem 1.5rem",
+                    borderRadius: "1rem",
+                    border: selectedTag === tag ? "none" : `2px solid ${blue}`,
+                    background: selectedTag === tag ? blueGradient : "#fff",
+                    color: selectedTag === tag ? "#fff" : blue,
+                    boxShadow: selectedTag === tag ? blueShadow : "none",
                     cursor: "pointer",
-                    flex: "0 0 auto"
+                    transition: "all 0.2s"
                   }}
                   type="button"
                 >
@@ -526,7 +590,7 @@ function App() {
             
             <div style={{
               display: "flex",
-              gap: "0.5rem",
+              gap: "0.75rem",
               width: "100%"
             }}>
               <input
@@ -535,10 +599,10 @@ function App() {
                 onChange={e => setNewTag(e.target.value)}
                 placeholder="Add new tag"
                 style={{
-                  fontSize: "0.9rem",
-                  padding: "0.5rem 0.75rem",
-                  borderRadius: "0.5rem",
-                  border: "2px solid #2563eb",
+                  fontSize: "1rem",
+                  padding: "0.75rem",
+                  borderRadius: "0.75rem",
+                  border: `2px solid ${blue}`,
                   flex: 1,
                   minWidth: 0,
                   boxSizing: "border-box"
@@ -554,15 +618,14 @@ function App() {
                 }}
                 style={{
                   fontWeight: 700,
-                  fontSize: "0.9rem",
-                  padding: "0.5rem 1rem",
-                  borderRadius: "0.5rem",
-                  background: "linear-gradient(90deg, #2563eb 60%, #3b82f6 100%)",
+                  fontSize: "1rem",
+                  padding: "0.75rem 1.5rem",
+                  borderRadius: "0.75rem",
+                  background: blueGradient,
                   color: "#fff",
                   border: "none",
                   cursor: "pointer",
-                  whiteSpace: "nowrap",
-                  flex: "0 0 auto"
+                  whiteSpace: "nowrap"
                 }}
               >
                 Add Tag
@@ -573,19 +636,18 @@ function App() {
               display: "flex", 
               alignItems: "center", 
               gap: "1rem", 
-              justifyContent: "space-between",
-              flexWrap: "wrap"
+              justifyContent: "space-between"
             }}>
               <button
                 style={{
                   fontWeight: 700,
-                  fontSize: "1rem",
-                  padding: "0.75rem 1.5rem",
-                  borderRadius: "0.75rem",
-                  background: "linear-gradient(90deg, #2563eb 60%, #3b82f6 100%)",
+                  fontSize: "1.1rem",
+                  padding: "1rem 2rem",
+                  borderRadius: "1rem",
+                  background: blueGradient,
                   color: "#fff",
                   border: "none",
-                  boxShadow: "0 2px 8px rgba(37, 99, 235, 0.2)",
+                  boxShadow: blueShadow,
                   cursor: "pointer",
                   flex: 1
                 }}
@@ -597,11 +659,11 @@ function App() {
                 style={{
                   background: "none",
                   border: "none",
-                  color: "#2563eb",
-                  fontSize: "1rem",
+                  color: blue,
+                  fontSize: "1.1rem",
                   fontWeight: 700,
                   cursor: "pointer",
-                  padding: "0.75rem"
+                  padding: "1rem"
                 }}
                 onClick={() => setShowAdd(false)}
               >
