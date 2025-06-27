@@ -424,3 +424,12 @@ input[type="text"]:focus {
   opacity: 0.7;
   text-decoration: line-through;
 }
+
+/* Mobile styles */
+@media (max-width: 600px) {
+  .container {
+    padding: 10px;
+    font-size: 16px;
+  }
+  /* Adjust other classes as needed */
+}
