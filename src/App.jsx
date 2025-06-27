@@ -401,74 +401,59 @@ function App() {
       {/* Add Task Modal */}
       {showAdd && (
         <div className="modal-bg">
-          <div className="modal-card" style={{
-            minWidth: 380,
-            padding: "2.7em 2.7em 2.2em 2.7em",
-            background: "#fff",
-            borderRadius: 24,
-            boxShadow: "0 8px 48px #2563eb33"
-          }}>
-            <h2 style={{
-              textAlign: "center",
-              color: blue,
-              fontWeight: 800,
-              fontSize: "2em",
-              marginBottom: 24
-            }}>Add New Task</h2>
+          <div className="modal-card">
+            <h2 style={{ color: "#2563eb", fontSize: "2.5em", fontWeight: 700, textAlign: "center", marginBottom: "1em" }}>
+              Add New Task
+            </h2>
             <input
               type="text"
-              placeholder="Task Name *"
               value={newTask}
               onChange={e => setNewTask(e.target.value)}
+              placeholder="Task Name *"
               style={{
-                marginBottom: 22,
-                padding: "1.2em",
-                border: `2px solid ${blueLight}`,
-                borderRadius: 16,
-                fontSize: "1.2em"
+                fontSize: "1.5em",
+                padding: "1em",
+                borderRadius: "18px",
+                border: "2px solid #2563eb",
+                marginBottom: "1.2em",
+                width: "100%",
+                boxSizing: "border-box"
               }}
             />
-            <div className="tag-selector" style={{
-              marginBottom: 22,
-              display: "flex",
-              gap: 10,
-              justifyContent: "center",
-              flexWrap: "wrap"
-            }}>
+            <div style={{ display: "flex", gap: "1em", marginBottom: "1.2em" }}>
               {tags.map(tag => (
                 <button
                   key={tag}
+                  className={selectedTag === tag ? "tag-btn selected" : "tag-btn"}
                   onClick={() => setSelectedTag(tag)}
-                  className={`tag-btn${selectedTag === tag ? " active" : ""}`}
                   style={{
-                    flex: "1 1 100px",
-                    padding: "0.8em",
-                    borderRadius: 12,
-                    fontSize: "1.1em",
                     fontWeight: 700,
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                    background: selectedTag === tag ? blueGradient : "#f0f0f0",
-                    color: selectedTag === tag ? "#fff" : blue,
-                    border: `2px solid ${blue}`,
-                    textAlign: "center"
+                    fontSize: "1.3em",
+                    padding: "0.7em 2.2em",
+                    borderRadius: "18px",
+                    border: selectedTag === tag ? "none" : "2px solid #2563eb",
+                    background: selectedTag === tag ? "linear-gradient(90deg, #2563eb 60%, #3b82f6 100%)" : "#fff",
+                    color: selectedTag === tag ? "#fff" : "#2563eb",
+                    boxShadow: selectedTag === tag ? "0 2px 8px #2563eb33" : "none",
+                    cursor: "pointer"
                   }}
+                  type="button"
                 >
                   {tag}
                 </button>
               ))}
             </div>
-            <div style={{ marginBottom: 18 }}>
-              <label style={{ fontWeight: 600, fontSize: "1.1em" }}>Tag:</label>
+            <div style={{ marginBottom: "1.2em", textAlign: "left" }}>
+              <label style={{ fontWeight: 700, fontSize: "1.1em", color: "#222" }}>Tag:</label>
               <select
                 value={selectedTag}
                 onChange={e => setSelectedTag(e.target.value)}
                 style={{
-                  marginLeft: 12,
-                  padding: "0.5em 1em",
-                  borderRadius: 10,
-                  border: `2px solid ${blueLight}`,
-                  fontSize: "1em"
+                  fontSize: "1.1em",
+                  padding: "0.7em 1.5em",
+                  borderRadius: "12px",
+                  border: "2px solid #2563eb",
+                  marginLeft: "1em"
                 }}
               >
                 {tags.map(tag => (
@@ -476,63 +461,76 @@ function App() {
                 ))}
               </select>
             </div>
-            <div style={{ marginBottom: 18 }}>
+            <div style={{ display: "flex", gap: "1em", marginBottom: "1.2em" }}>
               <input
                 type="text"
-                placeholder="Add new tag"
                 value={newTag}
                 onChange={e => setNewTag(e.target.value)}
+                placeholder="Add new tag"
                 style={{
-                  padding: "0.7em 1em",
-                  borderRadius: 10,
-                  border: `2px solid ${blueLight}`,
-                  fontSize: "1em",
-                  marginRight: 8
+                  fontSize: "1.1em",
+                  padding: "0.7em 1.5em",
+                  borderRadius: "12px",
+                  border: "2px solid #2563eb",
+                  flex: 1
                 }}
               />
               <button
+                className="tag-btn"
+                type="button"
                 onClick={() => {
                   if (newTag.trim() && !tags.includes(newTag.trim())) {
-                    setTags([...tags, newTag.trim()])
-                    setSelectedTag(newTag.trim())
-                    setNewTag('')
+                    setTags([...tags, newTag.trim()]);
+                    setNewTag('');
                   }
                 }}
                 style={{
-                  padding: "0.7em 1.2em",
-                  borderRadius: 10,
-                  background: blueGradient,
+                  fontWeight: 700,
+                  fontSize: "1.1em",
+                  padding: "0.7em 2em",
+                  borderRadius: "18px",
+                  background: "linear-gradient(90deg, #2563eb 60%, #3b82f6 100%)",
                   color: "#fff",
                   border: "none",
-                  fontWeight: 600,
-                  fontSize: "1em"
+                  cursor: "pointer"
                 }}
               >
                 Add Tag
               </button>
             </div>
-            <button className="create-btn" onClick={addTask} style={{
-              background: blueGradient,
-              color: "#fff",
-              border: "none",
-              borderRadius: 18,
-              padding: "1.1em 0",
-              fontSize: "1.3em",
-              fontWeight: 700,
-              marginBottom: 10,
-              cursor: "pointer"
-            }}>Create Task</button>
-            <button className="close-btn" onClick={() => setShowAdd(false)} style={{
-              background: "none",
-              border: "none",
-              color: blue,
-              fontSize: "1.2em",
-              fontWeight: 700,
-              cursor: "pointer",
-              marginTop: 0
-            }}>
-              <X size={22} style={{ marginRight: 8 }} /> Close
-            </button>
+            <div style={{ display: "flex", alignItems: "center", gap: "1em", marginTop: "1.5em" }}>
+              <button
+                className="create-btn"
+                style={{
+                  fontWeight: 700,
+                  fontSize: "1.5em",
+                  padding: "0.9em 2.7em",
+                  borderRadius: "18px",
+                  background: "linear-gradient(90deg, #2563eb 60%, #3b82f6 100%)",
+                  color: "#fff",
+                  border: "none",
+                  boxShadow: "0 2px 8px #2563eb33",
+                  cursor: "pointer"
+                }}
+                onClick={addTask}
+              >
+                Create Task
+              </button>
+              <button
+                className="close-btn"
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#2563eb",
+                  fontSize: "1.3em",
+                  fontWeight: 700,
+                  cursor: "pointer"
+                }}
+                onClick={() => setShowAdd(false)}
+              >
+                &#10005; Close
+              </button>
+            </div>
           </div>
         </div>
       )}
