@@ -14,42 +14,73 @@ function App() {
   const [newTag, setNewTag] = useState('')
   const [tagFilter, setTagFilter] = useState('All Tags')
 
-  // No sample tasks, start empty
+  // Load tasks from backend
+  useEffect(() => {
+    fetch('http://localhost:3001/tasks')
+      .then(res => res.json())
+      .then(data => setTasks(data))
+  }, [])
 
+  // Add a new task to backend
   const addTask = () => {
     if (!newTask.trim()) return
-    setTasks([
-      ...tasks,
-      {
-        id: Date.now(),
-        text: newTask.trim(),
-        completed: false,
-        category: selectedTag,
-        created: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      },
-    ])
+    const task = {
+      text: newTask.trim(),
+      completed: false,
+      category: selectedTag,
+      created: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }
+    fetch('http://localhost:3001/tasks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(task)
+    })
+      .then(res => res.json())
+      .then(newTaskObj => setTasks([...tasks, newTaskObj]))
     setNewTask('')
     setShowAdd(false)
   }
 
+  // Toggle completion in backend
   const toggleTask = (id) => {
-    setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t))
+    const task = tasks.find(t => t.id === id)
+    fetch(`http://localhost:3001/tasks/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ completed: !task.completed })
+    })
+      .then(res => res.json())
+      .then(updatedTask => setTasks(tasks.map(t => t.id === id ? updatedTask : t)))
   }
 
+  // Delete from backend
   const deleteTask = (id) => {
-    setTasks(tasks.filter(t => t.id !== id))
+    fetch(`http://localhost:3001/tasks/${id}`, {
+      method: 'DELETE'
+    })
+      .then(() => setTasks(tasks.filter(t => t.id !== id)))
   }
 
+  // Start editing
   const startEditing = (id, text) => {
     setEditingId(id)
     setEditingText(text)
   }
 
+  // Save edit to backend
   const saveEdit = () => {
     if (!editingText.trim()) return
-    setTasks(tasks.map(t => t.id === editingId ? { ...t, text: editingText.trim() } : t))
-    setEditingId(null)
-    setEditingText('')
+    fetch(`http://localhost:3001/tasks/${editingId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: editingText.trim() })
+    })
+      .then(res => res.json())
+      .then(updatedTask => {
+        setTasks(tasks.map(t => t.id === editingId ? updatedTask : t))
+        setEditingId(null)
+        setEditingText('')
+      })
   }
 
   const cancelEdit = () => {
