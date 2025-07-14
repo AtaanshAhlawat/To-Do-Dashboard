@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
+import Auth from './Auth'
 import { Trash2, Edit2, Plus, Check, X, User } from 'lucide-react'
+import { fetchTasks, addTask, updateTask, deleteTask } from './apiService'
 
 function App() {
   const [tasks, setTasks] = useState([])
@@ -13,16 +15,15 @@ function App() {
   const [tags, setTags] = useState(['Personal', 'Work', 'Urgent'])
   const [newTag, setNewTag] = useState('')
   const [tagFilter, setTagFilter] = useState('All Tags')
+  const [authed, setAuthed] = useState(!!localStorage.getItem('token'))
 
   // Load tasks from backend
   useEffect(() => {
-    fetch('http://localhost:3001/tasks')
-      .then(res => res.json())
-      .then(data => setTasks(data))
-  }, [])
+    if (authed) fetchTasks().then(setTasks)
+  }, [authed])
 
   // Add a new task to backend
-  const addTask = () => {
+  const handleAddTask = () => {
     if (!newTask.trim()) return
     const task = {
       text: newTask.trim(),
@@ -30,13 +31,7 @@ function App() {
       category: selectedTag,
       created: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
-    fetch('http://localhost:3001/tasks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(task)
-    })
-      .then(res => res.json())
-      .then(newTaskObj => setTasks([...tasks, newTaskObj]))
+    addTask(task).then(newTaskObj => setTasks([...tasks, newTaskObj]))
     setNewTask('')
     setShowAdd(false)
   }
@@ -44,21 +39,13 @@ function App() {
   // Toggle completion in backend
   const toggleTask = (id) => {
     const task = tasks.find(t => t.id === id)
-    fetch(`http://localhost:3001/tasks/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ completed: !task.completed })
-    })
-      .then(res => res.json())
+    updateTask(id, { completed: !task.completed })
       .then(updatedTask => setTasks(tasks.map(t => t.id === id ? updatedTask : t)))
   }
 
   // Delete from backend
-  const deleteTask = (id) => {
-    fetch(`http://localhost:3001/tasks/${id}`, {
-      method: 'DELETE'
-    })
-      .then(() => setTasks(tasks.filter(t => t.id !== id)))
+  const handleDeleteTask = (id) => {
+    deleteTask(id).then(() => setTasks(tasks.filter(t => t.id !== id)))
   }
 
   // Start editing
@@ -70,12 +57,7 @@ function App() {
   // Save edit to backend
   const saveEdit = () => {
     if (!editingText.trim()) return
-    fetch(`http://localhost:3001/tasks/${editingId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: editingText.trim() })
-    })
-      .then(res => res.json())
+    updateTask(editingId, { text: editingText.trim() })
       .then(updatedTask => {
         setTasks(tasks.map(t => t.id === editingId ? updatedTask : t))
         setEditingId(null)
@@ -118,6 +100,8 @@ function App() {
       document.body.style.overflow = 'unset';
     };
   }, [showAdd]);
+
+  if (!authed) return <Auth onAuth={() => setAuthed(true)} />
 
   return (
     <div style={{
@@ -478,7 +462,7 @@ function App() {
                           <Edit2 size={18} />
                         </button>
                         <button 
-                          onClick={() => deleteTask(task.id)}
+                          onClick={() => handleDeleteTask(task.id)}
                           style={{
                             background: "rgba(255,255,255,0.2)",
                             border: "none",
@@ -682,7 +666,7 @@ function App() {
                   cursor: "pointer",
                   flex: 1
                 }}
-                onClick={addTask}
+                onClick={handleAddTask}
               >
                 Create Task
               </button>
