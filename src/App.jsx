@@ -16,7 +16,7 @@ function App() {
 
   // Load tasks from backend
   useEffect(() => {
-    fetch('https://to-do-4tfz.onrender.com/tasks')
+    fetch('http://localhost:3001/tasks')
       .then(res => res.json())
       .then(data => setTasks(data))
   }, [])
@@ -30,7 +30,7 @@ function App() {
       category: selectedTag,
       created: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
-    fetch('https://to-do-4tfz.onrender.com/tasks', {
+    fetch('http://localhost:3001/tasks', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(task)
@@ -44,7 +44,7 @@ function App() {
   // Toggle completion in backend
   const toggleTask = (id) => {
     const task = tasks.find(t => t.id === id)
-    fetch(`https://to-do-4tfz.onrender.com/tasks/${id}`, {
+    fetch(`http://localhost:3001/tasks/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ completed: !task.completed })
@@ -55,7 +55,7 @@ function App() {
 
   // Delete from backend
   const deleteTask = (id) => {
-    fetch(`https://to-do-4tfz.onrender.com/tasks/${id}`, {
+    fetch(`http://localhost:3001/tasks/${id}`, {
       method: 'DELETE'
     })
       .then(() => setTasks(tasks.filter(t => t.id !== id)))
@@ -70,7 +70,7 @@ function App() {
   // Save edit to backend
   const saveEdit = () => {
     if (!editingText.trim()) return
-    fetch(`https://to-do-4tfz.onrender.com/tasks/${editingId}`, {
+    fetch(`http://localhost:3001/tasks/${editingId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: editingText.trim() })
