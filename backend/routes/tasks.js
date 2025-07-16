@@ -35,11 +35,13 @@ router.post('/', auth, async (req, res, next) => {
   try {
     console.log('Incoming task:', req.body, 'User:', req.userId);
     const { text, completed, tags, description, created } = req.body;
+    const safeTags = Array.isArray(tags) ? tags : [];
+    const safeDescription = typeof description === 'string' ? description : '';
     const task = new Task({
       text,
       completed,
-      tags,
-      description,
+      tags: safeTags,
+      description: safeDescription,
       created,
       user: req.userId
     });
@@ -54,9 +56,12 @@ router.post('/', auth, async (req, res, next) => {
 // Update a task
 router.patch('/:id', auth, async (req, res, next) => {
   try {
+    const updates = { ...req.body };
+    if ('tags' in updates) updates.tags = Array.isArray(updates.tags) ? updates.tags : [];
+    if ('description' in updates) updates.description = typeof updates.description === 'string' ? updates.description : '';
     const task = await Task.findOneAndUpdate(
       { _id: req.params.id, user: req.userId },
-      req.body,
+      updates,
       { new: true }
     );
     if (!task) return res.status(404).json({ error: 'Not found' });

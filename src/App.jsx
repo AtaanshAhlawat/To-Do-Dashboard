@@ -52,8 +52,8 @@ function App() {
     const task = {
       text: newTask.trim(),
       completed: false,
-      tags: selectedTags,
-      description: newDescription,
+      tags: Array.isArray(selectedTags) ? selectedTags : [],
+      description: typeof newDescription === 'string' ? newDescription : '',
       created: new Date().toISOString()
     };
     await addTaskStore(task);
@@ -62,6 +62,7 @@ function App() {
     setSelectedTags([]);
     setNewDescription('');
   };
+
 
   // Toggle completion in backend
   const toggleTask = async (id) => {
@@ -108,7 +109,7 @@ function App() {
     (filter === 'active' ? !t.completed :
      filter === 'completed' ? t.completed : true) &&
     t.text.toLowerCase().includes(search.toLowerCase()) &&
-    (tagFilter.length === 0 ? true : tagFilter.every(tag => t.tags && t.tags.includes(tag)))
+    (tagFilter.length === 0 ? true : (t.tags && t.tags.some(tag => tagFilter.includes(tag))))
   );
 
   const tagTasks = tagFilter.length === 0
@@ -221,9 +222,9 @@ function App() {
             </div>
             <div>
               <div style={{ fontSize: "1.4rem", fontWeight: 700, color: blue, marginBottom: "0.5rem" }}>
-                {tagFilter === 'All Tags'
+                {tagFilter.length === 0
                   ? `You have ${tagActive} task${tagActive !== 1 ? 's' : ''} to complete.`
-                  : `You have ${tagActive} ${tagFilter} task${tagActive !== 1 ? 's' : ''} to complete.`}
+                  : `You have ${tagActive} ${tagFilter.join(', ')} task${tagActive !== 1 ? 's' : ''} to complete.`}
               </div>
               <div style={{ color: "#666", fontSize: "1.1rem" }}>
                 {tagComplete === 0
@@ -270,38 +271,38 @@ function App() {
               boxShadow: blueShadow
             }}>
               <User size={24} style={{ marginRight: "0.5rem" }} />
-              {tagFilter === 'All Tags'
+              {tagFilter.length === 0
                 ? `All Tasks (${filtered.length})`
-                : `${tagFilter} (${filtered.length})`}
+                : `${tagFilter.join(', ')} (${filtered.length})`}
             </div>
 
             {/* Tag Filter */}
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', margin: '0.5rem 0' }}>
-  {tags.map(tag => (
-    <button
-      key={tag}
-      type="button"
-      onClick={() => setTagFilter(tagFilter.includes(tag)
-        ? tagFilter.filter(t => t !== tag)
-        : [...tagFilter, tag])}
-      style={{
-        fontWeight: 600,
-        fontSize: '1rem',
-        padding: '0.5rem 1rem',
-        borderRadius: '1rem',
-        border: tagFilter.includes(tag) ? 'none' : `2px solid ${blueLight}`,
-        background: tagFilter.includes(tag) ? blueGradient : '#fff',
-        color: tagFilter.includes(tag) ? '#fff' : blue,
-        boxShadow: tagFilter.includes(tag) ? blueShadow : 'none',
-        cursor: 'pointer',
-        transition: 'all 0.2s',
-        marginBottom: 4
-      }}
-    >
-      {tag}
-    </button>
-  ))}
-</div>
+              {tags.map(tag => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => setTagFilter(tagFilter.includes(tag)
+                    ? tagFilter.filter(t => t !== tag)
+                    : [...tagFilter, tag])}
+                  style={{
+                    fontWeight: 600,
+                    fontSize: '1rem',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '1rem',
+                    border: tagFilter.includes(tag) ? 'none' : `2px solid ${blueLight}`,
+                    background: tagFilter.includes(tag) ? blueGradient : '#fff',
+                    color: tagFilter.includes(tag) ? '#fff' : blue,
+                    boxShadow: tagFilter.includes(tag) ? blueShadow : 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    marginBottom: 4
+                  }}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -401,10 +402,18 @@ function App() {
                       {task.text}
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
-                      {task.tags && task.tags.slice(0, 2).map(tag => (
-                        <span key={tag} style={{ background: "#fff", color: blue, fontWeight: 700, borderRadius: "0.75rem", padding: "0.3rem 0.8rem", fontSize: "0.9rem" }}>{tag}</span>
-                      ))}
-                      {task.tags && task.tags.length > 2 && <span style={{ background: "#fff", color: blue, borderRadius: "0.75rem", padding: "0.3rem 0.8rem", fontSize: "0.9rem" }}>+{task.tags.length-2}</span>}
+                      {(() => {
+                        const tags = Array.isArray(task.tags) ? task.tags : [];
+                        if (tags.length > 0) {
+                          return <>
+                            {tags.slice(0, 2).map(tag => (
+                              <span key={tag} style={{ background: "#fff", color: blue, fontWeight: 700, borderRadius: "0.75rem", padding: "0.3rem 0.8rem", fontSize: "0.9rem" }}>{tag}</span>
+                            ))}
+                            {tags.length > 2 && <span style={{ background: "#fff", color: blue, borderRadius: "0.75rem", padding: "0.3rem 0.8rem", fontSize: "0.9rem" }}>+{tags.length-2}</span>}
+                          </>;
+                        }
+                        return <span style={{ background: "#fff", color: blue, fontWeight: 500, borderRadius: "0.75rem", padding: "0.3rem 0.8rem", fontSize: "0.9rem", opacity: 0.6 }}>[No tags]</span>;
+                      })()}
                     </div>
                   </div>
                 ) : (
@@ -415,6 +424,7 @@ function App() {
                         <input
                           type="text"
                           value={editingText}
+                          onClick={e => e.stopPropagation()}
                           onChange={e => setEditingText(e.target.value)}
                           placeholder="Task name"
                           style={{
@@ -429,6 +439,7 @@ function App() {
                         />
                         <textarea
                           value={editingDescription}
+                          onClick={e => e.stopPropagation()}
                           onChange={e => setEditingDescription(e.target.value)}
                           placeholder="Description (optional)"
                           style={{
@@ -447,9 +458,9 @@ function App() {
                             <button
                               key={tag}
                               type="button"
-                              onClick={() => setEditingTags(editingTags.includes(tag)
+                              onClick={e => { e.stopPropagation(); setEditingTags(editingTags.includes(tag)
                                 ? editingTags.filter(t => t !== tag)
-                                : [...editingTags, tag])}
+                                : [...editingTags, tag]); }}
                               style={{
                                 fontWeight: 700,
                                 fontSize: "0.95rem",
@@ -515,12 +526,21 @@ function App() {
                           </div>
                         </div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, margin: '0.5rem 0' }}>
-                          {task.tags && task.tags.map(tag => (
-                            <span key={tag} style={{ background: "#fff", color: blue, fontWeight: 700, borderRadius: "0.75rem", padding: "0.3rem 1.1rem", fontSize: "0.95rem", marginBottom: 2 }}>{tag}</span>
-                          ))}
+                          {(() => {
+                            const tags = Array.isArray(task.tags) ? task.tags : [];
+                            if (tags.length > 0) {
+                              return tags.map(tag => (
+                                <span key={tag} style={{ background: "#fff", color: blue, fontWeight: 700, borderRadius: "0.75rem", padding: "0.3rem 1.1rem", fontSize: "0.95rem", marginBottom: 2 }}>{tag}</span>
+                              ));
+                            }
+                            return <span style={{ background: "#fff", color: blue, fontWeight: 500, borderRadius: "0.75rem", padding: "0.3rem 1.1rem", fontSize: "0.95rem", marginBottom: 2, opacity: 0.6 }}>[No tags]</span>;
+                          })()}
                         </div>
                         <div style={{ background: "#fff", color: blue, borderRadius: 12, padding: '1rem', margin: '0.5rem 0', fontSize: '1.05rem', fontWeight: 500, opacity: 0.95 }}>
-                          {task.description || <span style={{ opacity: 0.5 }}>[No description]</span>}
+                          {(() => {
+                            const description = typeof task.description === 'string' ? task.description : '';
+                            return description || <span style={{ opacity: 0.5 }}>[No description]</span>;
+                          })()}
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
                           <span style={{ fontSize: "0.9rem", opacity: 0.8 }}>

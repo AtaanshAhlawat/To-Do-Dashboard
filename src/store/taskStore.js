@@ -11,7 +11,11 @@ export const useTaskStore = create(persist((set, get) => ({
     set({ loading: true, error: null });
     try {
       const tasks = await fetchTasks();
-      set({ tasks, loading: false });
+      set({ tasks: tasks.map(t => ({
+  ...t,
+  tags: Array.isArray(t.tags) ? t.tags : [],
+  description: typeof t.description === 'string' ? t.description : ''
+})), loading: false });
     } catch (err) {
       set({ error: err.message, loading: false });
     }
@@ -21,7 +25,11 @@ export const useTaskStore = create(persist((set, get) => ({
     set({ loading: true, error: null });
     try {
       const newTask = await addTaskService({ ...task, tags: task.tags || [] });
-      set({ tasks: [...get().tasks, newTask], loading: false });
+      set({ tasks: [...get().tasks, {
+  ...newTask,
+  tags: Array.isArray(newTask.tags) ? newTask.tags : [],
+  description: typeof newTask.description === 'string' ? newTask.description : ''
+}], loading: false });
     } catch (err) {
       set({ error: err.message, loading: false });
     }
@@ -31,7 +39,11 @@ export const useTaskStore = create(persist((set, get) => ({
     set({ loading: true, error: null });
     try {
       const updated = await updateTask(id, { ...updates, tags: updates.tags || [] });
-      set({ tasks: get().tasks.map(t => t._id === id ? updated : t), loading: false });
+      set({ tasks: get().tasks.map(t => t._id === id ? {
+  ...updated,
+  tags: Array.isArray(updated.tags) ? updated.tags : [],
+  description: typeof updated.description === 'string' ? updated.description : ''
+} : t), loading: false });
     } catch (err) {
       set({ error: err.message, loading: false });
     }
