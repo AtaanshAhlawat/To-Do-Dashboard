@@ -12,6 +12,7 @@ function App() {
   const { loading: uiLoading, error: uiError, setError: setUIError } = useUIStore();
 
   // Local UI state
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [newTask, setNewTask] = useState('');
   const [showAdd, setShowAdd] = useState(false);
   const [filter, setFilter] = useState('all');
@@ -35,7 +36,7 @@ function App() {
       text: newTask.trim(),
       completed: false,
       category: selectedTag,
-      created: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      created: new Date().toISOString()
     };
     await addTaskStore(task);
     setNewTask('');
@@ -402,7 +403,10 @@ function App() {
                       fontSize: "0.9rem", 
                       opacity: 0.8 
                     }}>
-                      today {task.created}
+                      today {new Date(task.created).toLocaleString('en-US', {
+  month: 'long', day: 'numeric', year: 'numeric',
+  hour: 'numeric', minute: '2-digit', hour12: true
+})}
                     </span>
                   </div>
                   
