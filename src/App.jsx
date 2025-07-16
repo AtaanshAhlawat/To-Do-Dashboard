@@ -31,11 +31,15 @@ function App() {
   const [filter, setFilter] = useState('all');
   const [editingId, setEditingId] = useState(null);
   const [editingText, setEditingText] = useState('');
+  const [editingDescription, setEditingDescription] = useState('');
+  const [editingTags, setEditingTags] = useState([]);
   const [search, setSearch] = useState('');
-  const [selectedTag, setSelectedTag] = useState('Personal');
+  const [selectedTags, setSelectedTags] = useState(['Personal']);
   const [tags, setTags] = useState(['Personal', 'Work', 'Urgent']);
   const [newTag, setNewTag] = useState('');
-  const [tagFilter, setTagFilter] = useState('All Tags');
+  const [tagFilter, setTagFilter] = useState([]); // Multi-tag filter
+  const [newDescription, setNewDescription] = useState('');
+  const [expandedTaskId, setExpandedTaskId] = useState(null);
 
   // Load tasks on mount if logged in
   useEffect(() => {
@@ -48,12 +52,15 @@ function App() {
     const task = {
       text: newTask.trim(),
       completed: false,
-      category: selectedTag,
+      tags: selectedTags,
+      description: newDescription,
       created: new Date().toISOString()
     };
     await addTaskStore(task);
     setNewTask('');
     setShowAdd(false);
+    setSelectedTags([]);
+    setNewDescription('');
   };
 
   // Toggle completion in backend
@@ -69,34 +76,44 @@ function App() {
   };
 
   // Start editing
-  const startEditing = (id, text) => {
+  const startEditing = (id, text, description = '', tags = []) => {
     setEditingId(id);
     setEditingText(text);
+    setEditingDescription(description || '');
+    setEditingTags(tags || []);
   };
 
   // Save edit to backend
   const saveEdit = async () => {
     if (!editingText.trim()) return;
-    await updateTaskStore(editingId, { text: editingText.trim() });
+    await updateTaskStore(editingId, {
+      text: editingText.trim(),
+      description: editingDescription,
+      tags: editingTags
+    });
     setEditingId(null);
     setEditingText('');
+    setEditingDescription('');
+    setEditingTags([]);
   };
 
   const cancelEdit = () => {
     setEditingId(null);
     setEditingText('');
+    setEditingDescription('');
+    setEditingTags([]);
   };
 
   const filtered = tasks.filter(t =>
     (filter === 'active' ? !t.completed :
      filter === 'completed' ? t.completed : true) &&
     t.text.toLowerCase().includes(search.toLowerCase()) &&
-    (tagFilter === 'All Tags' ? true : t.category === tagFilter)
+    (tagFilter.length === 0 ? true : tagFilter.every(tag => t.tags && t.tags.includes(tag)))
   );
 
-  const tagTasks = tagFilter === 'All Tags'
+  const tagTasks = tagFilter.length === 0
     ? tasks
-    : tasks.filter(t => t.category === tagFilter);
+    : tasks.filter(t => t.tags && t.tags.some(tag => tagFilter.includes(tag)));
 
   const tagActive = tagTasks.filter(t => !t.completed).length;
   const tagComplete = tagTasks.filter(t => t.completed).length;
@@ -259,26 +276,32 @@ function App() {
             </div>
 
             {/* Tag Filter */}
-            <select
-              value={tagFilter}
-              onChange={e => setTagFilter(e.target.value)}
-              style={{
-                fontSize: "1.1rem",
-                padding: "0.8rem 1.2rem",
-                borderRadius: "1rem",
-                border: `2px solid ${blueLight}`,
-                background: "#fff",
-                color: blue,
-                fontWeight: 600,
-                width: "100%",
-                boxSizing: "border-box"
-              }}
-            >
-              <option value="All Tags">All Tags</option>
-              {tags.map(tag => (
-                <option key={tag} value={tag}>{tag}</option>
-              ))}
-            </select>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', margin: '0.5rem 0' }}>
+  {tags.map(tag => (
+    <button
+      key={tag}
+      type="button"
+      onClick={() => setTagFilter(tagFilter.includes(tag)
+        ? tagFilter.filter(t => t !== tag)
+        : [...tagFilter, tag])}
+      style={{
+        fontWeight: 600,
+        fontSize: '1rem',
+        padding: '0.5rem 1rem',
+        borderRadius: '1rem',
+        border: tagFilter.includes(tag) ? 'none' : `2px solid ${blueLight}`,
+        background: tagFilter.includes(tag) ? blueGradient : '#fff',
+        color: tagFilter.includes(tag) ? '#fff' : blue,
+        boxShadow: tagFilter.includes(tag) ? blueShadow : 'none',
+        cursor: 'pointer',
+        transition: 'all 0.2s',
+        marginBottom: 4
+      }}
+    >
+      {tag}
+    </button>
+  ))}
+</div>
           </div>
         </div>
 
@@ -337,21 +360,23 @@ function App() {
           }}>
             {filtered.map(task => (
               <div
-                key={task.id}
+                key={task._id}
                 style={{
                   background: blueGradient,
                   color: "#fff",
                   borderRadius: "1.5rem",
                   fontSize: "1.1rem",
                   boxShadow: "0 8px 32px rgba(37, 99, 235, 0.2)",
-                  padding: "1.5rem",
+                  padding: expandedTaskId === task._id ? "2rem" : "1.5rem",
                   display: "flex",
                   flexDirection: "column",
                   gap: "1rem",
-                  minHeight: "160px",
+                  minHeight: "80px",
                   position: "relative",
-                  transition: "transform 0.2s, box-shadow 0.2s"
+                  transition: "transform 0.2s, box-shadow 0.2s, padding 0.2s",
+                  cursor: "pointer"
                 }}
+                onClick={() => setExpandedTaskId(expandedTaskId === task._id ? null : task._id)}
                 onMouseEnter={e => {
                   e.currentTarget.style.transform = "translateY(-2px)"
                   e.currentTarget.style.boxShadow = "0 12px 40px rgba(37, 99, 235, 0.3)"
@@ -361,180 +386,191 @@ function App() {
                   e.currentTarget.style.boxShadow = "0 8px 32px rgba(37, 99, 235, 0.2)"
                 }}
               >
-                {/* Task Header */}
-                <div style={{
-                  display: "flex",
-                  alignItems: "flex-start",
-                  gap: "1rem"
-                }}>
-                  <input
-                    type="checkbox"
-                    checked={task.completed}
-                    onChange={() => toggleTask(task.id)}
-                    style={{ 
-                      accentColor: "#fff", 
-                      width: 20, 
-                      height: 20,
-                      marginTop: "2px",
-                      cursor: "pointer"
-                    }}
-                    title={task.completed ? "Mark as pending" : "Mark as completed"}
-                  />
-                  <div style={{ flex: 1 }}>
-                    {editingId === task.id ? (
-                      <input
-                        type="text"
-                        value={editingText}
-                        onChange={e => setEditingText(e.target.value)}
-                        onKeyDown={e => {
-                          if (e.key === "Enter") saveEdit()
-                          else if (e.key === "Escape") cancelEdit()
-                        }}
-                        autoFocus
-                        style={{ 
-                          fontSize: "1.1rem", 
-                          borderRadius: "0.5rem", 
-                          border: "none", 
-                          padding: "0.5rem",
-                          width: "100%",
-                          boxSizing: "border-box"
-                        }}
-                      />
-                    ) : (
-                      <div style={{
-                        fontWeight: 700,
-                        fontSize: "1.2rem",
-                        lineHeight: 1.4,
-                        textDecoration: task.completed ? "line-through" : "none",
-                        opacity: task.completed ? 0.7 : 1
-                      }}>
-                        {task.text}
-                      </div>
-                    )}
+                {/* Collapsed view: only show main info */}
+                {expandedTaskId !== task._id ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '100%' }}>
+                    <input
+                      type="checkbox"
+                      checked={task.completed}
+                      onClick={e => e.stopPropagation()}
+                      onChange={e => { e.stopPropagation(); toggleTask(task._id); }}
+                      style={{ accentColor: "#fff", width: 20, height: 20, marginTop: "2px", cursor: "pointer" }}
+                      title={task.completed ? "Mark as pending" : "Mark as completed"}
+                    />
+                    <div style={{ flex: 1, fontWeight: 700, fontSize: "1.2rem", lineHeight: 1.4, textDecoration: task.completed ? "line-through" : "none", opacity: task.completed ? 0.7 : 1 }}>
+                      {task.text}
+                    </div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      {task.tags && task.tags.slice(0, 2).map(tag => (
+                        <span key={tag} style={{ background: "#fff", color: blue, fontWeight: 700, borderRadius: "0.75rem", padding: "0.3rem 0.8rem", fontSize: "0.9rem" }}>{tag}</span>
+                      ))}
+                      {task.tags && task.tags.length > 2 && <span style={{ background: "#fff", color: blue, borderRadius: "0.75rem", padding: "0.3rem 0.8rem", fontSize: "0.9rem" }}>+{task.tags.length-2}</span>}
+                    </div>
                   </div>
-                </div>
-
-                {/* Task Footer */}
-                <div style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginTop: "auto"
-                }}>
-                  <div style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "0.5rem"
-                  }}>
-                    <span style={{
-                      background: "#fff",
-                      color: blue,
-                      fontWeight: 700,
-                      borderRadius: "0.75rem",
-                      padding: "0.4rem 1rem",
-                      fontSize: "0.9rem",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                      width: "fit-content"
-                    }}>
-                      <User size={14} /> {task.category}
-                    </span>
-                    <span style={{ 
-                      fontSize: "0.9rem", 
-                      opacity: 0.8 
-                    }}>
-                      {(() => {
-  const d = new Date(task.created);
-  const dateStr = d.toLocaleString('en-US', {
-    month: 'long', day: 'numeric', year: 'numeric',
-    hour: 'numeric', minute: '2-digit', hour12: true
-  });
-  // Format: July 16, 2025 (4:43 pm)
-  const [date, time] = dateStr.split(', ');
-  return `${date} (${time && time.replace(/\s/, '').toLowerCase()})`;
-})()}
-                    </span>
-                  </div>
-                  
-                  <div style={{ 
-                    display: "flex", 
-                    gap: "0.5rem",
-                    alignItems: "center"
-                  }}>
-                    {editingId === task.id ? (
+                ) : (
+                  // Expanded view: show all details
+                  <div>
+                    {editingId === task._id ? (
                       <>
-                        <button 
-                          onClick={saveEdit}
+                        <input
+                          type="text"
+                          value={editingText}
+                          onChange={e => setEditingText(e.target.value)}
+                          placeholder="Task name"
                           style={{
-                            background: "rgba(255,255,255,0.2)",
-                            border: "none",
-                            borderRadius: "0.5rem",
-                            padding: "0.5rem",
-                            color: "#fff",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center"
+                            fontSize: "1.2rem",
+                            fontWeight: 700,
+                            borderRadius: "0.75rem",
+                            border: `2px solid ${blue}`,
+                            padding: "0.75rem 1rem",
+                            marginBottom: 10,
+                            width: "100%"
                           }}
-                        >
-                          <Check size={18} />
-                        </button>
-                        <button 
-                          onClick={cancelEdit}
+                        />
+                        <textarea
+                          value={editingDescription}
+                          onChange={e => setEditingDescription(e.target.value)}
+                          placeholder="Description (optional)"
                           style={{
-                            background: "rgba(255,255,255,0.2)",
-                            border: "none",
-                            borderRadius: "0.5rem",
-                            padding: "0.5rem",
-                            color: "#fff",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center"
+                            fontSize: "1rem",
+                            padding: "0.75rem",
+                            borderRadius: "0.75rem",
+                            border: `2px solid ${blue}`,
+                            width: "100%",
+                            minHeight: 60,
+                            boxSizing: "border-box",
+                            margin: "0.5rem 0"
                           }}
-                        >
-                          <X size={18} />
-                        </button>
+                        />
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+                          {tags.map(tag => (
+                            <button
+                              key={tag}
+                              type="button"
+                              onClick={() => setEditingTags(editingTags.includes(tag)
+                                ? editingTags.filter(t => t !== tag)
+                                : [...editingTags, tag])}
+                              style={{
+                                fontWeight: 700,
+                                fontSize: "0.95rem",
+                                padding: "0.3rem 1.1rem",
+                                borderRadius: "0.75rem",
+                                border: editingTags.includes(tag) ? "none" : `2px solid ${blue}`,
+                                background: editingTags.includes(tag) ? blueGradient : "#fff",
+                                color: editingTags.includes(tag) ? "#fff" : blue,
+                                boxShadow: editingTags.includes(tag) ? blueShadow : "none",
+                                cursor: "pointer",
+                                marginBottom: 2
+                              }}
+                            >
+                              {tag}
+                            </button>
+                          ))}
+                        </div>
+                        <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                          <button
+                            onClick={async e => {
+                              e.stopPropagation();
+                              await saveEdit(task._id);
+                            }}
+                            style={{
+                              background: blueGradient,
+                              color: "#fff",
+                              border: "none",
+                              borderRadius: "0.5rem",
+                              padding: "0.6rem 1.4rem",
+                              fontWeight: 700,
+                              fontSize: "1rem",
+                              cursor: "pointer"
+                            }}
+                          >Save</button>
+                          <button
+                            onClick={e => { e.stopPropagation(); cancelEdit(); }}
+                            style={{
+                              background: "#fff",
+                              color: blue,
+                              border: `2px solid ${blue}`,
+                              borderRadius: "0.5rem",
+                              padding: "0.6rem 1.4rem",
+                              fontWeight: 700,
+                              fontSize: "1rem",
+                              cursor: "pointer"
+                            }}
+                          >Cancel</button>
+                        </div>
                       </>
                     ) : (
                       <>
-                        <button 
-                          onClick={() => startEditing(task.id, task.text)}
-                          style={{
-                            background: "rgba(255,255,255,0.2)",
-                            border: "none",
-                            borderRadius: "0.5rem",
-                            padding: "0.5rem",
-                            color: "#fff",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center"
-                          }}
-                        >
-                          <Edit2 size={18} />
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteTask(task.id)}
-                          style={{
-                            background: "rgba(255,255,255,0.2)",
-                            border: "none",
-                            borderRadius: "0.5rem",
-                            padding: "0.5rem",
-                            color: "#fff",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center"
-                          }}
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '100%' }}>
+                          <input
+                            type="checkbox"
+                            checked={task.completed}
+                            onClick={e => e.stopPropagation()}
+                            onChange={e => { e.stopPropagation(); toggleTask(task._id); }}
+                            style={{ accentColor: "#fff", width: 20, height: 20, marginTop: "2px", cursor: "pointer" }}
+                            title={task.completed ? "Mark as pending" : "Mark as completed"}
+                          />
+                          <div style={{ flex: 1, fontWeight: 700, fontSize: "1.3rem", lineHeight: 1.4, textDecoration: task.completed ? "line-through" : "none", opacity: task.completed ? 0.7 : 1 }}>
+                            {task.text}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, margin: '0.5rem 0' }}>
+                          {task.tags && task.tags.map(tag => (
+                            <span key={tag} style={{ background: "#fff", color: blue, fontWeight: 700, borderRadius: "0.75rem", padding: "0.3rem 1.1rem", fontSize: "0.95rem", marginBottom: 2 }}>{tag}</span>
+                          ))}
+                        </div>
+                        <div style={{ background: "#fff", color: blue, borderRadius: 12, padding: '1rem', margin: '0.5rem 0', fontSize: '1.05rem', fontWeight: 500, opacity: 0.95 }}>
+                          {task.description || <span style={{ opacity: 0.5 }}>[No description]</span>}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
+                          <span style={{ fontSize: "0.9rem", opacity: 0.8 }}>
+                            {(() => {
+                              const d = new Date(task.created);
+                              const dateStr = d.toLocaleString('en-US', {
+                                month: 'long', day: 'numeric', year: 'numeric',
+                                hour: 'numeric', minute: '2-digit', hour12: true
+                              });
+                              const [date, time] = dateStr.split(', ');
+                              return `${date} (${time && time.replace(/\s/, '').toLowerCase()})`;
+                            })()}
+                          </span>
+                          <button 
+                            onClick={e => { e.stopPropagation(); startEditing(task._id, task.text, task.description, task.tags); }}
+                            style={{
+                              background: "rgba(255,255,255,0.2)",
+                              border: "none",
+                              borderRadius: "0.5rem",
+                              padding: "0.5rem",
+                              color: "#fff",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center"
+                            }}
+                          >
+                            <Edit2 size={18} />
+                          </button>
+                          <button 
+                            onClick={e => { e.stopPropagation(); handleDeleteTask(task._id); }}
+                            style={{
+                              background: "rgba(255,255,255,0.2)",
+                              border: "none",
+                              borderRadius: "0.5rem",
+                              padding: "0.5rem",
+                              color: "#fff",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center"
+                            }}
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
                       </>
                     )}
                   </div>
-                </div>
+                )}
               </div>
             ))}
           </div>
@@ -637,16 +673,18 @@ function App() {
               {tags.map(tag => (
                 <button
                   key={tag}
-                  onClick={() => setSelectedTag(tag)}
+                  onClick={() => setSelectedTags(selectedTags.includes(tag)
+                    ? selectedTags.filter(t => t !== tag)
+                    : [...selectedTags, tag])}
                   style={{
                     fontWeight: 700,
                     fontSize: "1rem",
                     padding: "0.75rem 1.5rem",
                     borderRadius: "1rem",
-                    border: selectedTag === tag ? "none" : `2px solid ${blue}`,
-                    background: selectedTag === tag ? blueGradient : "#fff",
-                    color: selectedTag === tag ? "#fff" : blue,
-                    boxShadow: selectedTag === tag ? blueShadow : "none",
+                    border: selectedTags.includes(tag) ? "none" : `2px solid ${blue}`,
+                    background: selectedTags.includes(tag) ? blueGradient : "#fff",
+                    color: selectedTags.includes(tag) ? "#fff" : blue,
+                    boxShadow: selectedTags.includes(tag) ? blueShadow : "none",
                     cursor: "pointer",
                     transition: "all 0.2s"
                   }}
@@ -656,6 +694,23 @@ function App() {
                 </button>
               ))}
             </div>
+
+            {/* Description field */}
+            <textarea
+              value={newDescription}
+              onChange={e => setNewDescription(e.target.value)}
+              placeholder="Description (optional)"
+              style={{
+                fontSize: "1rem",
+                padding: "0.75rem",
+                borderRadius: "0.75rem",
+                border: `2px solid ${blue}`,
+                width: "100%",
+                minHeight: 60,
+                boxSizing: "border-box",
+                margin: "0.5rem 0"
+              }}
+            />
             
             <div style={{
               display: "flex",

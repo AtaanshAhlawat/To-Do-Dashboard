@@ -20,7 +20,7 @@ export const useTaskStore = create(persist((set, get) => ({
   addTask: async (task) => {
     set({ loading: true, error: null });
     try {
-      const newTask = await addTask(task);
+      const newTask = await addTask({ ...task, tags: task.tags || [] });
       set({ tasks: [...get().tasks, newTask], loading: false });
     } catch (err) {
       set({ error: err.message, loading: false });
@@ -30,7 +30,7 @@ export const useTaskStore = create(persist((set, get) => ({
   updateTask: async (id, updates) => {
     set({ loading: true, error: null });
     try {
-      const updated = await updateTask(id, updates);
+      const updated = await updateTask(id, { ...updates, tags: updates.tags || [] });
       set({ tasks: get().tasks.map(t => t._id === id ? updated : t), loading: false });
     } catch (err) {
       set({ error: err.message, loading: false });

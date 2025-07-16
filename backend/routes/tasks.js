@@ -34,11 +34,12 @@ router.get('/', auth, async (req, res, next) => {
 router.post('/', auth, async (req, res, next) => {
   try {
     console.log('Incoming task:', req.body, 'User:', req.userId);
-    const { text, completed, category, created } = req.body;
+    const { text, completed, tags, description, created } = req.body;
     const task = new Task({
       text,
       completed,
-      category,
+      tags,
+      description,
       created,
       user: req.userId
     });
