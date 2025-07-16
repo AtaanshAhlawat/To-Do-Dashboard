@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { fetchTasks, addTask, updateTask, deleteTask } from '../apiService';
+import { fetchTasks, addTask as addTaskService, updateTask, deleteTask } from '../apiService';
 
 export const useTaskStore = create(persist((set, get) => ({
   tasks: [],
@@ -20,7 +20,7 @@ export const useTaskStore = create(persist((set, get) => ({
   addTask: async (task) => {
     set({ loading: true, error: null });
     try {
-      const newTask = await addTask({ ...task, tags: task.tags || [] });
+      const newTask = await addTaskService({ ...task, tags: task.tags || [] });
       set({ tasks: [...get().tasks, newTask], loading: false });
     } catch (err) {
       set({ error: err.message, loading: false });
