@@ -6,6 +6,17 @@ import { useTaskStore } from './store/taskStore';
 import { useUIStore } from './store/uiStore';
 
 function App() {
+  // Auto-fix: clear old persisted data if schema is wrong
+  useEffect(() => {
+    try {
+      const persisted = JSON.parse(localStorage.getItem('task-storage'));
+      if (persisted && Array.isArray(persisted.tasks) && persisted.tasks.some(t => t.category && !t.tags)) {
+        localStorage.clear();
+        window.location.reload();
+      }
+    } catch {}
+  }, []);
+
   // Zustand stores
   const { user, token, logout } = useAuthStore();
   const { tasks, loadTasks, addTask: addTaskStore, updateTask: updateTaskStore, deleteTask: deleteTaskStore, loading: tasksLoading, error: tasksError, clear: clearTasks } = useTaskStore();
@@ -45,6 +56,14 @@ function App() {
   useEffect(() => {
     if (token) loadTasks();
   }, [token, loadTasks]);
+
+  // Always sync tag list with all unique tags from tasks
+  useEffect(() => {
+    const allTags = Array.from(new Set(tasks.flatMap(t => Array.isArray(t.tags) ? t.tags : [])));
+    const defaultTags = ['Personal', 'Work', 'Urgent'];
+    const merged = Array.from(new Set([...defaultTags, ...allTags]));
+    setTags(merged);
+  }, [tasks]);
 
   // Add a new task to backend
   const handleAddTask = async () => {
@@ -359,7 +378,8 @@ function App() {
             gap: "1.5rem",
             width: "100%"
           }}>
-            {filtered.map(task => (
+            {console.log('TASKS FOR RENDER', tasks)}
+{filtered.map(task => (
               <div
                 key={task._id}
                 style={{
