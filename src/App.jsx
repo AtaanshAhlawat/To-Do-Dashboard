@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Auth from './Auth';
 import { Trash2, Edit2, Plus, Check, X, User } from 'lucide-react';
 import { useAuthStore } from './store/authStore';
@@ -13,6 +13,19 @@ function App() {
 
   // Local UI state
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const profileMenuRef = useRef(null);
+
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    if (!showProfileMenu) return;
+    function handleClick(e) {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
+        setShowProfileMenu(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showProfileMenu]);
   const [newTask, setNewTask] = useState('');
   const [showAdd, setShowAdd] = useState(false);
   const [filter, setFilter] = useState('all');
@@ -108,6 +121,34 @@ function App() {
   if (!token) return <Auth onAuth={loadTasks} />;
 
   return (
+    <>
+      {/* Profile Icon Top Right */}
+      {user && (
+        <div style={{ position: 'fixed', top: 24, right: 32, zIndex: 1000 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ position: 'relative' }}>
+              <button
+                style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                onClick={() => setShowProfileMenu(v => !v)}
+                aria-label="Profile menu"
+              >
+                <User size={32} color="#18192b" />
+              </button>
+              {showProfileMenu && (
+                <div ref={profileMenuRef} style={{
+                  position: 'absolute', top: 40, right: 0, background: '#fff', boxShadow: '0 2px 12px #0001', borderRadius: 8, padding: '0.5rem 1.5rem', minWidth: 120
+                }}>
+                  <button
+                    style={{ background: 'none', border: 'none', color: '#c43cff', fontWeight: 700, cursor: 'pointer', fontSize: 16, padding: 0 }}
+                    onClick={() => { setShowProfileMenu(false); logout(); }}
+                  >Logout</button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
     <div style={{
       minHeight: "100vh",
       width: "100vw",
@@ -403,10 +444,16 @@ function App() {
                       fontSize: "0.9rem", 
                       opacity: 0.8 
                     }}>
-                      today {new Date(task.created).toLocaleString('en-US', {
-  month: 'long', day: 'numeric', year: 'numeric',
-  hour: 'numeric', minute: '2-digit', hour12: true
-})}
+                      {(() => {
+  const d = new Date(task.created);
+  const dateStr = d.toLocaleString('en-US', {
+    month: 'long', day: 'numeric', year: 'numeric',
+    hour: 'numeric', minute: '2-digit', hour12: true
+  });
+  // Format: July 16, 2025 (4:43 pm)
+  const [date, time] = dateStr.split(', ');
+  return `${date} (${time && time.replace(/\s/, '').toLowerCase()})`;
+})()}
                     </span>
                   </div>
                   
@@ -696,6 +743,7 @@ function App() {
         </div>
       )}
     </div>
+    </>
   )
 }
 
