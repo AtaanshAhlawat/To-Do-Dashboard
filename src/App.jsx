@@ -1,89 +1,92 @@
-import { useState, useEffect } from 'react'
-import Auth from './Auth'
-import { Trash2, Edit2, Plus, Check, X, User } from 'lucide-react'
-import { fetchTasks, addTask, updateTask, deleteTask } from './apiService'
+import { useState, useEffect } from 'react';
+import Auth from './Auth';
+import { Trash2, Edit2, Plus, Check, X, User } from 'lucide-react';
+import { useAuthStore } from './store/authStore';
+import { useTaskStore } from './store/taskStore';
+import { useUIStore } from './store/uiStore';
 
 function App() {
-  const [tasks, setTasks] = useState([])
-  const [newTask, setNewTask] = useState('')
-  const [showAdd, setShowAdd] = useState(false)
-  const [filter, setFilter] = useState('all')
-  const [editingId, setEditingId] = useState(null)
-  const [editingText, setEditingText] = useState('')
-  const [search, setSearch] = useState('')
-  const [selectedTag, setSelectedTag] = useState('Personal')
-  const [tags, setTags] = useState(['Personal', 'Work', 'Urgent'])
-  const [newTag, setNewTag] = useState('')
-  const [tagFilter, setTagFilter] = useState('All Tags')
-  const [authed, setAuthed] = useState(!!localStorage.getItem('token'))
+  // Zustand stores
+  const { user, token, logout } = useAuthStore();
+  const { tasks, loadTasks, addTask: addTaskStore, updateTask: updateTaskStore, deleteTask: deleteTaskStore, loading: tasksLoading, error: tasksError, clear: clearTasks } = useTaskStore();
+  const { loading: uiLoading, error: uiError, setError: setUIError } = useUIStore();
 
-  // Load tasks from backend
+  // Local UI state
+  const [newTask, setNewTask] = useState('');
+  const [showAdd, setShowAdd] = useState(false);
+  const [filter, setFilter] = useState('all');
+  const [editingId, setEditingId] = useState(null);
+  const [editingText, setEditingText] = useState('');
+  const [search, setSearch] = useState('');
+  const [selectedTag, setSelectedTag] = useState('Personal');
+  const [tags, setTags] = useState(['Personal', 'Work', 'Urgent']);
+  const [newTag, setNewTag] = useState('');
+  const [tagFilter, setTagFilter] = useState('All Tags');
+
+  // Load tasks on mount if logged in
   useEffect(() => {
-    if (authed) fetchTasks().then(setTasks)
-  }, [authed])
+    if (token) loadTasks();
+  }, [token, loadTasks]);
 
   // Add a new task to backend
-  const handleAddTask = () => {
-    if (!newTask.trim()) return
+  const handleAddTask = async () => {
+    if (!newTask.trim()) return;
     const task = {
       text: newTask.trim(),
       completed: false,
       category: selectedTag,
       created: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    }
-    addTask(task).then(newTaskObj => setTasks([...tasks, newTaskObj]))
-    setNewTask('')
-    setShowAdd(false)
-  }
+    };
+    await addTaskStore(task);
+    setNewTask('');
+    setShowAdd(false);
+  };
 
   // Toggle completion in backend
-  const toggleTask = (id) => {
-    const task = tasks.find(t => t.id === id)
-    updateTask(id, { completed: !task.completed })
-      .then(updatedTask => setTasks(tasks.map(t => t.id === id ? updatedTask : t)))
-  }
+  const toggleTask = async (id) => {
+    const task = tasks.find(t => t._id === id);
+    if (!task) return;
+    await updateTaskStore(id, { completed: !task.completed });
+  };
 
   // Delete from backend
-  const handleDeleteTask = (id) => {
-    deleteTask(id).then(() => setTasks(tasks.filter(t => t.id !== id)))
-  }
+  const handleDeleteTask = async (id) => {
+    await deleteTaskStore(id);
+  };
 
   // Start editing
   const startEditing = (id, text) => {
-    setEditingId(id)
-    setEditingText(text)
-  }
+    setEditingId(id);
+    setEditingText(text);
+  };
 
   // Save edit to backend
-  const saveEdit = () => {
-    if (!editingText.trim()) return
-    updateTask(editingId, { text: editingText.trim() })
-      .then(updatedTask => {
-        setTasks(tasks.map(t => t.id === editingId ? updatedTask : t))
-        setEditingId(null)
-        setEditingText('')
-      })
-  }
+  const saveEdit = async () => {
+    if (!editingText.trim()) return;
+    await updateTaskStore(editingId, { text: editingText.trim() });
+    setEditingId(null);
+    setEditingText('');
+  };
 
   const cancelEdit = () => {
-    setEditingId(null)
-    setEditingText('')
-  }
+    setEditingId(null);
+    setEditingText('');
+  };
 
   const filtered = tasks.filter(t =>
     (filter === 'active' ? !t.completed :
      filter === 'completed' ? t.completed : true) &&
     t.text.toLowerCase().includes(search.toLowerCase()) &&
     (tagFilter === 'All Tags' ? true : t.category === tagFilter)
-  )
+  );
 
   const tagTasks = tagFilter === 'All Tags'
     ? tasks
-    : tasks.filter(t => t.category === tagFilter)
+    : tasks.filter(t => t.category === tagFilter);
 
-  const tagActive = tagTasks.filter(t => !t.completed).length
-  const tagComplete = tagTasks.filter(t => t.completed).length
-  const tagPercent = tagTasks.length ? Math.round((tagComplete / tagTasks.length) * 100) : 0
+  const tagActive = tagTasks.filter(t => !t.completed).length;
+  const tagComplete = tagTasks.filter(t => t.completed).length;
+  const tagPercent = tagTasks.length ? Math.round((tagComplete / tagTasks.length) * 100) : 0;
 
   const blue = "#2563eb"
   const blueLight = "#3b82f6"
@@ -101,7 +104,7 @@ function App() {
     };
   }, [showAdd]);
 
-  if (!authed) return <Auth onAuth={() => setAuthed(true)} />
+  if (!token) return <Auth onAuth={loadTasks} />;
 
   return (
     <div style={{

@@ -1,37 +1,41 @@
-import { useState } from 'react'
-import { login, register } from './apiService'
+import { useState } from 'react';
+import { useAuthStore } from './store/authStore';
 
 export default function Auth({ onAuth }) {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [isLogin, setIsLogin] = useState(true)
-  const [error, setError] = useState('')
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLogin, setIsLogin] = useState(true);
+  const [successMsg, setSuccessMsg] = useState('');
+  const { login: loginAction, register: registerAction, error, loading } = useAuthStore();
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-    const fn = isLogin ? login : register
-    const res = await fn(username, password)
-    if (res.token) {
-      localStorage.setItem('token', res.token)
-      onAuth()
-    } else if (res.message) {
-      setIsLogin(true)
+    e.preventDefault();
+    setSuccessMsg('');
+    if (isLogin) {
+      const success = await loginAction(username, password);
+      if (success && onAuth) onAuth();
     } else {
-      setError(res.error || 'Error')
+      const success = await registerAction(username, password);
+      if (success) {
+        setSuccessMsg('Registration successful! Please log in.');
+        setIsLogin(true);
+        setPassword('');
+      }
     }
-  }
+  };
 
   return (
     <form onSubmit={handleSubmit}>
       <h2>{isLogin ? 'Login' : 'Register'}</h2>
-      <input value={username} onChange={e => setUsername(e.target.value)} placeholder="Username" required />
-      <input value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" type="password" required />
-      <button type="submit">{isLogin ? 'Login' : 'Register'}</button>
-      <button type="button" onClick={() => setIsLogin(!isLogin)}>
+      <input value={username} onChange={e => setUsername(e.target.value)} placeholder="Username" required autoComplete="username" />
+      <input value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" type="password" required autoComplete={isLogin ? "current-password" : "new-password"} />
+      <button type="submit" disabled={loading}>{isLogin ? 'Login' : 'Register'}</button>
+      <button type="button" onClick={() => { setIsLogin(!isLogin); setSuccessMsg(''); }} disabled={loading}>
         {isLogin ? 'Need an account? Register' : 'Already have an account? Login'}
       </button>
-      {error && <div style={{color:'red'}}>{error}</div>}
+      {successMsg && <div style={{color:'green', marginTop:8}}>{successMsg}</div>}
+      {error && <div style={{color:'red', marginTop:8}}>{error}</div>}
+      {loading && <div style={{color:'#2563eb', marginTop:8}}>Loading...</div>}
     </form>
-  )
+  );
 }
