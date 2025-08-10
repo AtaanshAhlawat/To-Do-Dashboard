@@ -34,15 +34,15 @@ router.get('/', auth, async (req, res, next) => {
 router.post('/', auth, async (req, res, next) => {
   try {
     console.log('Incoming task:', req.body, 'User:', req.userId);
-    const { text, completed, tags, description, created } = req.body;
+    const { text, completed, tags, description } = req.body;
     const safeTags = Array.isArray(tags) ? tags : [];
     const safeDescription = typeof description === 'string' ? description : '';
     const task = new Task({
       text,
-      completed,
+      completed: Boolean(completed),
       tags: safeTags,
       description: safeDescription,
-      created,
+      // Let the model's default handle the created timestamp
       user: req.userId
     });
     await task.save();
