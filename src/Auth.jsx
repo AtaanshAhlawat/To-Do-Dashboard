@@ -1,41 +1,101 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useAuthStore } from './store/authStore';
+import { authStyles } from './styles/authStyles';
 
 export default function Auth({ onAuth }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(true);
-  const [successMsg, setSuccessMsg] = useState('');
-  const { login: loginAction, register: registerAction, error, loading } = useAuthStore();
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
+  
+  const { login, register } = useAuthStore();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSuccessMsg('');
-    if (isLogin) {
-      const success = await loginAction(username, password);
-      if (success && onAuth) onAuth();
-    } else {
-      const success = await registerAction(username, password);
-      if (success) {
-        setSuccessMsg('Registration successful! Please log in.');
+    setError('');
+    setSuccess('');
+    setLoading(true);
+    
+    // Basic validation
+    if (!username.trim() || !password) {
+      setError('Username and password are required');
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      if (isLogin) {
+        await login(username, password);
+        setSuccess('Login successful!');
+        if (onAuth) onAuth();
+      } else {
+        // For demo purposes, we'll just log in after registration
+        await register(username, 'demo@example.com', password);
+        setSuccess('Registration successful! Please log in.');
         setIsLogin(true);
         setPassword('');
       }
+    } catch (err) {
+      setError(err.message || 'An error occurred');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>{isLogin ? 'Login' : 'Register'}</h2>
-      <input value={username} onChange={e => setUsername(e.target.value)} placeholder="Username" required autoComplete="username" />
-      <input value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" type="password" required autoComplete={isLogin ? "current-password" : "new-password"} />
-      <button type="submit" disabled={loading}>{isLogin ? 'Login' : 'Register'}</button>
-      <button type="button" onClick={() => { setIsLogin(!isLogin); setSuccessMsg(''); }} disabled={loading}>
-        {isLogin ? 'Need an account? Register' : 'Already have an account? Login'}
-      </button>
-      {successMsg && <div style={{color:'green', marginTop:8}}>{successMsg}</div>}
-      {error && <div style={{color:'red', marginTop:8}}>{error}</div>}
-      {loading && <div style={{color:'#2563eb', marginTop:8}}>Loading...</div>}
-    </form>
+    <div style={authStyles.container}>
+      <div style={authStyles.form}>
+        <h2 style={authStyles.title}>
+          {isLogin ? 'Sign In' : 'Create Account'}
+        </h2>
+        
+        {error && <div style={authStyles.error}>{error}</div>}
+        {success && <div style={authStyles.success}>{success}</div>}
+        
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            style={{ ...authStyles.formElement, ...authStyles.input }}
+            disabled={loading}
+            aria-label="Username"
+          />
+          
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={{ ...authStyles.formElement, ...authStyles.input }}
+            disabled={loading}
+            aria-label="Password"
+          />
+          
+          <button 
+            type="submit" 
+            style={{ ...authStyles.formElement, ...authStyles.button }}
+            disabled={loading}
+            aria-busy={loading}
+          >
+            {loading ? 'Loading...' : isLogin ? 'Sign In' : 'Sign Up'}
+          </button>
+        </form>
+        
+        <button 
+          type="button"
+          style={authStyles.toggle}
+          onClick={() => !loading && setIsLogin(!isLogin)}
+          disabled={loading}
+        >
+          {isLogin 
+            ? "Don't have an account? Sign up" 
+            : 'Already have an account? Sign in'}
+        </button>
+      </div>
+    </div>
   );
 }

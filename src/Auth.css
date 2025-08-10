@@ -1,0 +1,336 @@
+/* Auth.css */
+
+/* Variables */
+:root {
+  --theme-signup: #03A9F4;
+  --theme-signup-darken: #0288D1;
+  --theme-signup-background: #2C3034;
+  --theme-login: #673AB7;
+  --theme-login-darken: #512DA8;
+  --theme-login-background: #f9f9f9;
+  --theme-dark: #212121;
+  --theme-light: #e3e3e3;
+  --success: #5cb85c;
+  --error: #d9534f;
+}
+
+/* Base Styles */
+.auth-container {
+  margin: 0;
+  height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: 'Roboto', sans-serif;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Background */
+.auth-background {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+.back-right {
+  position: absolute;
+  right: 0;
+  width: 50%;
+  height: 100%;
+  background: var(--theme-signup);
+  transition: all 0.5s ease-in-out;
+}
+
+.back-left {
+  position: absolute;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: var(--theme-login);
+  transition: all 0.5s ease-in-out;
+}
+
+/* Slide Box */
+.slide-box {
+  width: 50%;
+  max-height: 100%;
+  height: 100%;
+  overflow: hidden;
+  margin-left: 50%;
+  position: absolute;
+  box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+  transition: all 0.5s ease-in-out;
+}
+
+.slide-box.slide-left {
+  margin-left: 0;
+}
+
+.top-layer {
+  width: 200%;
+  height: 100%;
+  position: relative;
+  left: 0;
+  display: flex;
+  transition: all 0.5s ease-in-out;
+}
+
+.top-layer.slide-left {
+  left: -100%;
+}
+
+/* Form Containers */
+.form-container {
+  width: 50%;
+  height: 100%;
+  overflow-y: auto;
+  padding: 2rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.signup-container {
+  background: var(--theme-signup-background);
+}
+
+.login-container {
+  background: var(--theme-login-background);
+}
+
+/* Form Elements */
+.form-content {
+  max-width: 400px;
+  width: 100%;
+  margin: 0 auto;
+  color: white;
+}
+
+.login-container .form-content {
+  color: var(--theme-dark);
+}
+
+.form-content h2 {
+  font-weight: 300;
+  font-size: 2.6em;
+  margin: 0.2em 0 1em;
+  color: var(--theme-signup);
+}
+
+.login-container .form-content h2 {
+  color: var(--theme-login);
+}
+
+.form-group {
+  margin: 1.6em 0;
+  position: relative;
+}
+
+.form-label {
+  font-size: 0.8em;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 0.5em;
+  color: var(--theme-light);
+}
+
+.login-container .form-label {
+  color: var(--theme-dark);
+}
+
+.form-input {
+  background-color: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--theme-light);
+  outline: 0;
+  font-size: 1em;
+  padding: 8px 1px;
+  margin-top: 0.1em;
+  width: 100%;
+  color: var(--theme-light);
+  transition: all 0.3s ease;
+}
+
+.login-container .form-input {
+  border-bottom-color: var(--theme-dark);
+  color: var(--theme-dark);
+}
+
+.form-input:focus {
+  border-color: var(--theme-signup);
+  color: var(--theme-signup);
+}
+
+.login-container .form-input:focus {
+  border-color: var(--theme-login);
+}
+
+/* Buttons */
+.btn {
+  padding: 0.8em 1.2em;
+  margin: 0 10px 10px 0;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 1em;
+  color: #fff;
+  line-height: 1em;
+  letter-spacing: 0.6px;
+  border-radius: 3px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1), 0 3px 6px rgba(0,0,0,0.1);
+  border: 0;
+  outline: 0;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.btn-signup {
+  background: var(--theme-signup);
+}
+
+.btn-login {
+  background: var(--theme-login);
+}
+
+.btn-ghost {
+  background: none;
+  box-shadow: none;
+  margin: 0;
+  padding: 0.5em 0;
+}
+
+.btn-ghost.signup {
+  color: var(--theme-signup);
+}
+
+.btn-ghost.login {
+  color: var(--theme-login);
+}
+
+.btn:hover {
+  box-shadow: 0 4px 7px rgba(0,0,0,0.1), 0 3px 6px rgba(0,0,0,0.1);
+  transform: translateY(-1px);
+}
+
+.btn-signup:hover {
+  background: var(--theme-signup-darken);
+}
+
+.btn-login:hover {
+  background: var(--theme-login-darken);
+}
+
+.btn-ghost:hover {
+  box-shadow: none;
+  transform: none;
+  text-decoration: underline;
+}
+
+/* Checkbox */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  margin: 1.6em 0;
+}
+
+.checkbox-input {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background-color: var(--theme-light);
+  border: 1px solid var(--theme-light);
+  border-radius: 3px;
+  margin-right: 8px;
+  position: relative;
+  cursor: pointer;
+}
+
+.checkbox-input:checked {
+  background-color: var(--theme-signup);
+  border-color: var(--theme-signup);
+}
+
+.checkbox-input:checked::after {
+  content: '✓';
+  position: absolute;
+  color: white;
+  font-size: 12px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.checkbox-label {
+  font-size: 0.72em;
+  color: var(--theme-light);
+}
+
+.login-container .checkbox-label {
+  color: var(--theme-dark);
+}
+
+.checkbox-label a {
+  color: var(--theme-signup);
+  text-decoration: none;
+}
+
+.login-container .checkbox-label a {
+  color: var(--theme-login);
+}
+
+/* Messages */
+.message {
+  margin-top: 1em;
+  padding: 0.5em;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.message-success {
+  color: var(--success);
+  background-color: rgba(92, 184, 92, 0.1);
+}
+
+.message-error {
+  color: var(--error);
+  background-color: rgba(217, 83, 79, 0.1);
+}
+
+.message-loading {
+  color: var(--theme-signup);
+}
+
+/* Responsive */
+@media only screen and (max-width: 768px) {
+  .slide-box {
+    width: 80%;
+    margin-left: 20%;
+  }
+  
+  .slide-box.slide-left {
+    margin-left: 0;
+  }
+  
+  .back-right, .back-left {
+    display: none;
+  }
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.form-content > * {
+  animation: fadeIn 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.form-content > *:nth-child(1) { animation-delay: 0.1s; }
+.form-content > *:nth-child(2) { animation-delay: 0.2s; }
+.form-content > *:nth-child(3) { animation-delay: 0.3s; }
+.form-content > *:nth-child(4) { animation-delay: 0.4s; }
+.form-content > *:nth-child(5) { animation-delay: 0.5s; }

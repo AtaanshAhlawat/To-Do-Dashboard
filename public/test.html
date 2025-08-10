@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+    .test-container {
+      text-align: center;
+      padding: 2rem;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      color: #333;
+    }
+    .success {
+      color: #28a745;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <h1>Test Page</h1>
+    <p>If you can see this, the server is running correctly.</p>
+    <p class="success">✓ Static HTML is working</p>
+    <p>Check the console for JavaScript logs.</p>
+  </div>
+
+  <script>
+    console.log('Test page script loaded');
+    console.log('Document ready state:', document.readyState);
+    
+    // Test if React is loaded
+    console.log('React available:', typeof React !== 'undefined' ? 'Yes' : 'No');
+    
+    // Test if any React components are available
+    try {
+      const reactComponents = [];
+      for (let key in window) {
+        if (key.startsWith('React')) {
+          reactComponents.push(key);
+        }
+      }
+      console.log('React components found:', reactComponents.length > 0 ? reactComponents : 'None');
+    } catch (e) {
+      console.log('Error checking for React:', e.message);
+    }
+  </script>
+</body>
+</html>

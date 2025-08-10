@@ -155,7 +155,13 @@ function App() {
     };
   }, [showAdd]);
 
-  if (!token) return <Auth onAuth={loadTasks} />;
+  console.log('Auth check - Token:', token);
+  console.log('Auth check - User:', user);
+  
+  if (!token) {
+    console.log('No token found, rendering Auth component');
+    return <Auth onAuth={loadTasks} />;
+  }
 
   return (
     <>
