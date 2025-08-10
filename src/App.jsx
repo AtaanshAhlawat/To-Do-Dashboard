@@ -72,8 +72,7 @@ function App() {
       text: newTask.trim(),
       completed: false,
       tags: Array.isArray(selectedTags) ? selectedTags : [],
-      description: typeof newDescription === 'string' ? newDescription : '',
-      created: new Date().toISOString()
+      description: typeof newDescription === 'string' ? newDescription : ''
     };
     await addTaskStore(task);
     setNewTask('');
