@@ -27,17 +27,22 @@ export default function Auth({ onAuth }) {
     
     try {
       if (isLogin) {
-        await login(username, password);
-        setSuccess('Login successful!');
-        if (onAuth) onAuth();
+        const result = await login(username, password);
+        if (result) {
+          setSuccess('Login successful!');
+          // Small delay to show success message before redirecting
+          setTimeout(() => {
+            if (onAuth) onAuth();
+          }, 500);
+        }
       } else {
-        // For demo purposes, we'll just log in after registration
         await register(username, 'demo@example.com', password);
         setSuccess('Registration successful! Please log in.');
         setIsLogin(true);
         setPassword('');
       }
     } catch (err) {
+      console.error('Auth error:', err);
       setError(err.message || 'An error occurred');
     } finally {
       setLoading(false);

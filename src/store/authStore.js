@@ -18,12 +18,12 @@ export const useAuthStore = create(persist((set, get) => ({
       return true;
     } catch (err) {
       set({ error: err.message, loading: false });
-      return false;
+      throw err; // Re-throw error so Auth.jsx can catch it
     }
   },
 
   // Register action
-  register: async (username, password) => {
+  register: async (username, email, password) => {
     set({ loading: true, error: null });
     try {
       await register(username, password);
@@ -31,7 +31,7 @@ export const useAuthStore = create(persist((set, get) => ({
       return true;
     } catch (err) {
       set({ error: err.message, loading: false });
-      return false;
+      throw err; // Re-throw error so Auth.jsx can catch it
     }
   },
 
