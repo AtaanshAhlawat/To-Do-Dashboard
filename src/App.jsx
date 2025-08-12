@@ -106,6 +106,8 @@ function App() {
   const [editingText, setEditingText] = useState('');
   const [editingDescription, setEditingDescription] = useState('');
   const [editingTags, setEditingTags] = useState([]);
+  const [editingDeadline, setEditingDeadline] = useState('');
+  const [editingPriority, setEditingPriority] = useState('normal');
   const [search, setSearch] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
   const [expandedTaskId, setExpandedTaskId] = useState(null);
@@ -196,31 +198,7 @@ function App() {
     setTags(merged);
   }, [tasks]);
 
-  // Add a new task to backend
-  const handleAddTask = async () => {
-    if (!newTask.trim()) return;
-    const task = {
-      text: newTask.trim(),
-      completed: false,
-      tags: Array.isArray(selectedTags) ? selectedTags : [],
-      description: typeof newDescription === 'string' ? newDescription : '',
-      deadline: newDeadline,
-      priority: newPriority
-    };
-    
-    try {
-      await addTaskStore(task);
-      setNewTask('');
-      setNewDescription('');
-      setSelectedTags([]);
-      setNewDeadline('');
-      setNewPriority('normal');
-      setShowAdd(false);
-    } catch (error) {
-      console.error('Error adding task:', error);
-      setUIError('Failed to add task. Please try again.');
-    }
-  };
+
 
 
   // Toggle completion in backend
@@ -241,8 +219,8 @@ function App() {
     setEditingText(task.text);
     setEditingDescription(task.description || '');
     setEditingTags([...(task.tags || [])]);
-    setNewDeadline(task.deadline || '');
-    setNewPriority(task.priority || 'normal');
+    setEditingDeadline(task.deadline || '');
+    setEditingPriority(task.priority || 'normal');
     setShowAdd(true);
   };
 
@@ -250,37 +228,59 @@ function App() {
   const handleSaveTask = async (e) => {
     e.preventDefault();
     
-    if (!editingText.trim()) return;
-    
-    const taskData = {
-      text: editingText.trim(),
-      description: editingDescription.trim(),
-      tags: editingTags,
-      completed: taskStatus[editingId] || false,
-      deadline: newDeadline,
-      priority: newPriority
-    };
-    
-    try {
-      if (editingId) {
-        // Update existing task
-        await updateTaskStore(editingId, taskData);
-      } else {
-        // Create new task
-        await addTaskStore(taskData);
-      }
+    if (editingId) {
+      // Editing existing task
+      if (!editingText.trim()) return;
       
-      // Reset form and close modal
-      setEditingId(null);
-      setEditingText('');
-      setEditingDescription('');
-      setEditingTags([]);
-      setNewDeadline('');
-      setNewPriority('normal');
-      setShowAdd(false);
-    } catch (error) {
-      console.error('Error saving task:', error);
-      setUIError('Failed to save task. Please try again.');
+      const taskData = {
+        text: editingText.trim(),
+        description: editingDescription.trim(),
+        tags: editingTags,
+        deadline: editingDeadline,
+        priority: editingPriority
+      };
+      
+      try {
+        await updateTaskStore(editingId, taskData);
+        
+        // Reset form and close modal
+        setEditingId(null);
+        setEditingText('');
+        setEditingDescription('');
+        setEditingTags([]);
+        setEditingDeadline('');
+        setEditingPriority('normal');
+        setShowAdd(false);
+      } catch (error) {
+        console.error('Error updating task:', error);
+        setUIError('Failed to update task. Please try again.');
+      }
+    } else {
+      // Creating new task
+      if (!newTask.trim()) return;
+      
+      const taskData = {
+        text: newTask.trim(),
+        description: newDescription.trim(),
+        tags: selectedTags,
+        deadline: newDeadline,
+        priority: newPriority
+      };
+      
+      try {
+        await addTaskStore(taskData);
+        
+        // Reset form and close modal
+        setNewTask('');
+        setNewDescription('');
+        setSelectedTags([]);
+        setNewDeadline('');
+        setNewPriority('normal');
+        setShowAdd(false);
+      } catch (error) {
+        console.error('Error creating task:', error);
+        setUIError('Failed to create task. Please try again.');
+      }
     }
   };
 
@@ -289,6 +289,8 @@ function App() {
     setEditingText('');
     setEditingDescription('');
     setEditingTags([]);
+    setEditingDeadline('');
+    setEditingPriority('normal');
   };
 
   const handleAddTag = (e) => {
@@ -300,33 +302,14 @@ function App() {
   };
 
   const handleRemoveTag = (index) => {
-    setSelectedTags(selectedTags.filter((_, i) => i !== index));
-  };
-
-  const startEditing = (id, text, description, tags) => {
-    setEditingId(id);
-    setEditingText(text);
-    setEditingDescription(description || '');
-    setEditingTags(tags || []);
-  };
-
-  const saveEdit = async (id) => {
-    try {
-      const taskData = {
-        text: editingText,
-        description: editingDescription,
-        tags: editingTags
-      };
-      await updateTaskStore(id, taskData);
-      setEditingId(null);
-      setEditingText('');
-      setEditingDescription('');
-      setEditingTags([]);
-    } catch (error) {
-      console.error('Error updating task:', error);
-      setUIError('Failed to update task. Please try again.');
+    if (editingId) {
+      setEditingTags(editingTags.filter((_, i) => i !== index));
+    } else {
+      setSelectedTags(selectedTags.filter((_, i) => i !== index));
     }
   };
+
+
 
   const filteredTasks = tasks.filter(task => {
     // Apply search filter
@@ -1753,7 +1736,7 @@ function App() {
                             {formatDate(task.created)}
                           </span>
                           <button 
-                            onClick={e => { e.stopPropagation(); startEditing(task._id, task.text, task.description, task.tags); }}
+                            onClick={e => { e.stopPropagation(); handleEditClick(task); }}
                             style={{
                               background: "rgba(255,255,255,0.2)",
                               border: "none",
@@ -1865,13 +1848,13 @@ function App() {
               textAlign: "center", 
               margin: 0 
             }}>
-              Add New Task
+              {editingId ? 'Edit Task' : 'Add New Task'}
             </h2>
             
             <input
               type="text"
-              value={newTask}
-              onChange={e => setNewTask(e.target.value)}
+              value={editingId ? editingText : newTask}
+              onChange={e => editingId ? setEditingText(e.target.value) : setNewTask(e.target.value)}
               placeholder="Task Name *"
               style={{
                 fontSize: "1.1rem",
@@ -1892,18 +1875,26 @@ function App() {
               {tags.map(tag => (
                 <button
                   key={tag}
-                  onClick={() => setSelectedTags(selectedTags.includes(tag)
-                    ? selectedTags.filter(t => t !== tag)
-                    : [...selectedTags, tag])}
+                  onClick={() => {
+                    if (editingId) {
+                      setEditingTags(editingTags.includes(tag)
+                        ? editingTags.filter(t => t !== tag)
+                        : [...editingTags, tag]);
+                    } else {
+                      setSelectedTags(selectedTags.includes(tag)
+                        ? selectedTags.filter(t => t !== tag)
+                        : [...selectedTags, tag]);
+                    }
+                  }}
                   style={{
                     fontWeight: 700,
                     fontSize: "1rem",
                     padding: "0.75rem 1.5rem",
                     borderRadius: "1rem",
-                    border: selectedTags.includes(tag) ? "none" : `2px solid ${blue}`,
-                    background: selectedTags.includes(tag) ? blueGradient : "#fff",
-                    color: selectedTags.includes(tag) ? "#fff" : blue,
-                    boxShadow: selectedTags.includes(tag) ? blueShadow : "none",
+                    border: (editingId ? editingTags : selectedTags).includes(tag) ? "none" : `2px solid ${blue}`,
+                    background: (editingId ? editingTags : selectedTags).includes(tag) ? blueGradient : "#fff",
+                    color: (editingId ? editingTags : selectedTags).includes(tag) ? "#fff" : blue,
+                    boxShadow: (editingId ? editingTags : selectedTags).includes(tag) ? blueShadow : "none",
                     cursor: "pointer",
                     transition: "all 0.2s"
                   }}
@@ -1916,8 +1907,8 @@ function App() {
 
             {/* Description field */}
             <textarea
-              value={newDescription}
-              onChange={e => setNewDescription(e.target.value)}
+              value={editingId ? editingDescription : newDescription}
+              onChange={e => editingId ? setEditingDescription(e.target.value) : setNewDescription(e.target.value)}
               placeholder="Description (optional)"
               style={{
                 fontSize: "1rem",
@@ -1976,7 +1967,7 @@ function App() {
               gap: "0.5rem",
               marginBottom: "1rem"
             }}>
-              {selectedTags.map((tag, index) => (
+              {(editingId ? editingTags : selectedTags).map((tag, index) => (
                 <div key={index} style={{
                   background: "rgba(37, 99, 235, 0.1)",
                   color: blue,
@@ -2025,7 +2016,7 @@ function App() {
                 </label>
                 <input
                   type="datetime-local"
-                  value={newDeadline}
+                  value={editingId ? editingDeadline : newDeadline}
                   onChange={e => setNewDeadline(e.target.value)}
                   style={{
                     width: "100%",
@@ -2046,7 +2037,7 @@ function App() {
                   Priority
                 </label>
                 <select
-                  value={newPriority}
+                  value={editingId ? editingPriority : newPriority}
                   onChange={e => setNewPriority(e.target.value)}
                   style={{
                     width: "100%",
@@ -2084,9 +2075,9 @@ function App() {
                   cursor: "pointer",
                   flex: 1
                 }}
-                onClick={handleAddTask}
+                onClick={handleSaveTask}
               >
-                Create Task
+                {editingId ? 'Update Task' : 'Create Task'}
               </button>
               <button
                 style={{
@@ -2100,11 +2091,22 @@ function App() {
                 }}
                 onClick={() => {
                   setShowAdd(false);
-                  setNewTask('');
-                  setNewDescription('');
-                  setSelectedTags([]);
-                  setNewDeadline('');
-                  setNewPriority('normal');
+                  if (editingId) {
+                    // Reset editing state
+                    setEditingId(null);
+                    setEditingText('');
+                    setEditingDescription('');
+                    setEditingTags([]);
+                    setEditingDeadline('');
+                    setEditingPriority('normal');
+                  } else {
+                    // Reset adding state
+                    setNewTask('');
+                    setNewDescription('');
+                    setSelectedTags([]);
+                    setNewDeadline('');
+                    setNewPriority('normal');
+                  }
                 }}
               >
                 ✕ Close
