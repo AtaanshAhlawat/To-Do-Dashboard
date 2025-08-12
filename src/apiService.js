@@ -86,6 +86,13 @@ export function logout() {
   clearTokens();
 }
 
+export async function deleteAccount() {
+  return apiFetch('/delete-account', {
+    method: 'DELETE',
+    auth: true,
+  });
+}
+
 // --- Task Service ---
 export async function fetchTasks() {
   return apiFetch('/tasks', { auth: true });

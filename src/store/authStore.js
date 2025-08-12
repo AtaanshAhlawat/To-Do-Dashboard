@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { login, logout as apiLogout, register, refreshToken } from '../apiService';
+import { login, logout as apiLogout, register, refreshToken, deleteAccount as apiDeleteAccount } from '../apiService';
 
 export const useAuthStore = create(persist((set, get) => ({
   user: null,
@@ -14,16 +14,19 @@ export const useAuthStore = create(persist((set, get) => ({
     set({ loading: true, error: null });
     try {
       const res = await login(username, password);
-      set({ user: username, token: res.token, refreshToken: res.refreshToken, loading: false });
+      const newState = { user: { username }, token: res.token, refreshToken: res.refreshToken, loading: false };
+      console.log('Setting auth state:', newState);
+      set(newState);
+      console.log('Auth state after set:', get());
       return true;
     } catch (err) {
       set({ error: err.message, loading: false });
-      throw err; // Re-throw error so Auth.jsx can catch it
+      return false;
     }
   },
 
   // Register action
-  register: async (username, email, password) => {
+  register: async (username, password) => {
     set({ loading: true, error: null });
     try {
       await register(username, password);
@@ -31,7 +34,7 @@ export const useAuthStore = create(persist((set, get) => ({
       return true;
     } catch (err) {
       set({ error: err.message, loading: false });
-      throw err; // Re-throw error so Auth.jsx can catch it
+      return false;
     }
   },
 
@@ -39,6 +42,19 @@ export const useAuthStore = create(persist((set, get) => ({
   logout: () => {
     apiLogout();
     set({ user: null, token: null, refreshToken: null });
+  },
+
+  // Delete account action
+  deleteAccount: async () => {
+    try {
+      await apiDeleteAccount();
+      apiLogout();
+      set({ user: null, token: null, refreshToken: null });
+      return true;
+    } catch (err) {
+      console.error('Delete account error:', err);
+      return false;
+    }
   },
 
   // Refresh token action

@@ -26,17 +26,23 @@ export default function Auth({ onAuth }) {
     }
     
     try {
-      if (isLogin) {
-        const result = await login(username, password);
-        if (result) {
-          setSuccess('Login successful!');
-          // Small delay to show success message before redirecting
-          setTimeout(() => {
-            if (onAuth) onAuth();
-          }, 500);
-        }
-      } else {
-        await register(username, 'demo@example.com', password);
+              if (isLogin) {
+          const result = await login(username, password);
+          if (result) {
+            setSuccess('Login successful!');
+            // Small delay to show success message before redirecting
+            setTimeout(() => {
+              if (onAuth) onAuth();
+            }, 500);
+          } else {
+            setError('Login failed. Please check your credentials.');
+          }
+        } else {
+                  const registerResult = await register(username, password);
+          if (!registerResult) {
+            setError('Registration failed. Please try again.');
+            return;
+          }
         setSuccess('Registration successful! Please log in.');
         setIsLogin(true);
         setPassword('');

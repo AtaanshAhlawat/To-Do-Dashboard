@@ -32,7 +32,7 @@ function App() {
   }, []);
 
   // Zustand stores
-  const { user, token, logout } = useAuthStore();
+  const { user, token, logout, deleteAccount } = useAuthStore();
   const { tasks, loadTasks, addTask: addTaskStore, updateTask: updateTaskStore, deleteTask: deleteTaskStore, loading: tasksLoading, error: tasksError, clear: clearTasks } = useTaskStore();
   const { loading: uiLoading, error: uiError, setError: setUIError } = useUIStore();
 
@@ -43,6 +43,8 @@ function App() {
   const tagFilterRef = useRef(null);
   const [tagFilter, setTagFilter] = useState([]); // Multi-tag filter
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   // Get all unique tags from tasks
   const allTags = [...new Set(tasks.flatMap(task => task.tags || []))];
@@ -58,15 +60,20 @@ function App() {
 
   // Handle account deletion
   const handleDeleteAccount = async () => {
-    if (window.confirm('Are you sure you want to delete your account? This action cannot be undone and will delete all your data.')) {
-      try {
-        // Call your API to delete the user account
-        // await deleteUserAccount();
-        logout();
-      } catch (error) {
-        console.error('Error deleting account:', error);
+    setDeletingAccount(true);
+    try {
+      const success = await deleteAccount();
+      if (success) {
+        // Account deleted successfully, user is already logged out
+        setUIError('Account deleted successfully');
+      } else {
         setUIError('Failed to delete account. Please try again.');
       }
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      setUIError('Failed to delete account. Please try again.');
+    } finally {
+      setDeletingAccount(false);
     }
   };
 
@@ -372,6 +379,8 @@ function App() {
 
   console.log('Auth check - Token:', token);
   console.log('Auth check - User:', user);
+  console.log('Auth check - Token type:', typeof token);
+  console.log('Auth check - User type:', typeof user);
   
   if (!token) {
     console.log('No token found, rendering Auth component');
@@ -492,7 +501,7 @@ function App() {
                     }}
                     onClick={() => {
                       setShowProfileMenu(false);
-                      handleDeleteAccount();
+                      setShowDeleteAccountModal(true);
                     }}
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -2100,6 +2109,105 @@ function App() {
               >
                 ✕ Close
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteAccountModal && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0, 0, 0, 0.5)",
+          backdropFilter: "blur(8px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000,
+          padding: "1rem",
+          boxSizing: "border-box"
+        }}>
+          <div style={{
+            background: "#fff",
+            borderRadius: "1.5rem",
+            boxShadow: "0 20px 80px rgba(0, 0, 0, 0.3)",
+            padding: "2rem",
+            width: "100%",
+            maxWidth: "500px",
+            boxSizing: "border-box"
+          }}>
+            <h2 style={{ 
+              color: "#ef4444", 
+              fontSize: "1.8rem", 
+              fontWeight: 700, 
+              textAlign: "center", 
+              margin: 0,
+              marginBottom: "1rem"
+            }}>
+              ⚠️ Delete Account
+            </h2>
+            
+            <p style={{
+              fontSize: "1.1rem",
+              color: "#374151",
+              textAlign: "center",
+              marginBottom: "2rem",
+              lineHeight: 1.6
+            }}>
+              Are you absolutely sure you want to delete your account? 
+              <br /><br />
+              <strong>This action cannot be undone and will permanently delete:</strong>
+              <br />
+              • Your account and profile
+              <br />
+              • All your tasks and data
+              <br />
+              • All your settings and preferences
+            </p>
+            
+            <div style={{ 
+              display: "flex", 
+              gap: "1rem", 
+              justifyContent: "center"
+            }}>
+              <button
+                style={{
+                  background: deletingAccount ? "#9ca3af" : "#6b7280",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "0.75rem",
+                  padding: "0.75rem 1.5rem",
+                  fontSize: "1rem",
+                  fontWeight: 600,
+                  cursor: deletingAccount ? "not-allowed" : "pointer",
+                  transition: "all 0.2s"
+                }}
+                disabled={deletingAccount}
+                onClick={() => setShowDeleteAccountModal(false)}
+              >
+                Cancel
+              </button>
+                              <button
+                  style={{
+                    background: deletingAccount ? "#9ca3af" : "#ef4444",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "0.75rem",
+                    padding: "0.75rem 1.5rem",
+                    fontSize: "1rem",
+                    fontWeight: 600,
+                    cursor: deletingAccount ? "not-allowed" : "pointer",
+                    transition: "all 0.2s"
+                  }}
+                  disabled={deletingAccount}
+                  onClick={() => {
+                    setShowDeleteAccountModal(false);
+                    handleDeleteAccount();
+                  }}
+                >
+                  {deletingAccount ? "Deleting..." : "Delete Account"}
+                </button>
             </div>
           </div>
         </div>

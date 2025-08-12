@@ -2,6 +2,8 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Task = require('../models/Task');
+const authMiddleware = require('../middleware/authMiddleware');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -54,6 +56,23 @@ router.post('/refresh', async (req, res, next) => {
     res.json({ token });
   } catch (err) {
     res.status(403).json({ error: 'Invalid refresh token' });
+  }
+});
+
+// Delete account
+router.delete('/delete-account', authMiddleware, async (req, res, next) => {
+  try {
+    const userId = req.user._id;
+    
+    // Delete all tasks associated with the user
+    await Task.deleteMany({ user: userId });
+    
+    // Delete the user account
+    await User.findByIdAndDelete(userId);
+    
+    res.json({ message: 'Account and all associated data deleted successfully' });
+  } catch (err) {
+    next(err);
   }
 });
 
