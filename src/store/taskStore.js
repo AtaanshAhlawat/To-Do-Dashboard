@@ -1,67 +1,124 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { fetchTasks, addTask as addTaskService, updateTask, deleteTask } from '../apiService';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import {
+  fetchTasks,
+  addTask as addTaskService,
+  updateTask,
+  deleteTask,
+} from "../apiService";
 
-export const useTaskStore = create(persist((set, get) => ({
-  tasks: [],
-  loading: false,
-  error: null,
+export const useTaskStore = create(
+  persist(
+    (set, get) => ({
+      tasks: [],
+      loading: false,
+      error: null,
 
-  loadTasks: async () => {
-    set({ loading: true, error: null });
-    try {
-      const tasks = await fetchTasks();
-      set({ tasks: tasks.map(t => ({
-  ...t,
-  tags: Array.isArray(t.tags) ? t.tags : [],
-  description: typeof t.description === 'string' ? t.description : ''
-})), loading: false });
-    } catch (err) {
-      set({ error: err.message, loading: false });
-    }
-  },
+      loadTasks: async () => {
+        set({ loading: true, error: null });
+        try {
+          const tasks = await fetchTasks();
+          set({
+            tasks: tasks.map((t) => ({
+              ...t,
+              tags: Array.isArray(t.tags) ? t.tags : [],
+              description:
+                typeof t.description === "string" ? t.description : "",
+            })),
+            loading: false,
+          });
+        } catch (err) {
+          set({ error: err.message, loading: false });
+        }
+      },
 
-  addTask: async (task) => {
-    set({ loading: true, error: null });
-    try {
-      const newTask = await addTaskService({ ...task, tags: task.tags || [] });
-      set({ tasks: [...get().tasks, {
-  ...newTask,
-  tags: Array.isArray(newTask.tags) ? newTask.tags : [],
-  description: typeof newTask.description === 'string' ? newTask.description : ''
-}], loading: false });
-    } catch (err) {
-      set({ error: err.message, loading: false });
-    }
-  },
+      addTask: async (task) => {
+        set({ loading: true, error: null });
+        try {
+          const newTask = await addTaskService({
+            ...task,
+            tags: task.tags || [],
+          });
+          set({
+            tasks: [
+              ...get().tasks,
+              {
+                ...newTask,
+                tags: Array.isArray(newTask.tags) ? newTask.tags : [],
+                description:
+                  typeof newTask.description === "string"
+                    ? newTask.description
+                    : "",
+              },
+            ],
+            loading: false,
+          });
+        } catch (err) {
+          set({ error: err.message, loading: false });
+        }
+      },
 
-  updateTask: async (id, updates) => {
-    set({ loading: true, error: null });
-    try {
-      const updated = await updateTask(id, { ...updates, tags: updates.tags || [] });
-      set({ tasks: get().tasks.map(t => t._id === id ? {
-  ...updated,
-  tags: Array.isArray(updated.tags) ? updated.tags : [],
-  description: typeof updated.description === 'string' ? updated.description : ''
-} : t), loading: false });
-    } catch (err) {
-      set({ error: err.message, loading: false });
-    }
-  },
+      updateTask: async (id, updates) => {
+        set({ loading: true, error: null });
+        try {
+          // Get the current task to preserve existing fields
+          const currentTask = get().tasks.find((t) => t._id === id);
 
-  deleteTask: async (id) => {
-    set({ loading: true, error: null });
-    try {
-      await deleteTask(id);
-      set({ tasks: get().tasks.filter(t => t._id !== id), loading: false });
-    } catch (err) {
-      set({ error: err.message, loading: false });
-    }
-  },
+          // Don't modify tags unless explicitly provided
+          const updateData = { ...updates };
+          if (updateData.tags !== undefined) {
+            updateData.tags = Array.isArray(updateData.tags)
+              ? updateData.tags
+              : [];
+          }
 
-  clear: () => set({ tasks: [], error: null })
+          const updated = await updateTask(id, updateData);
 
-}), {
-  name: 'task-storage',
-  partialize: state => ({ tasks: state.tasks }),
-}));
+          // Merge updated task with existing task to preserve fields not returned by backend
+          const mergedTask = {
+            ...currentTask,
+            ...updated,
+            tags:
+              updated.tags !== undefined
+                ? Array.isArray(updated.tags)
+                  ? updated.tags
+                  : currentTask?.tags || []
+                : currentTask?.tags || [],
+            description:
+              updated.description !== undefined
+                ? typeof updated.description === "string"
+                  ? updated.description
+                  : ""
+                : currentTask?.description || "",
+          };
+
+          set({
+            tasks: get().tasks.map((t) => (t._id === id ? mergedTask : t)),
+            loading: false,
+          });
+        } catch (err) {
+          set({ error: err.message, loading: false });
+        }
+      },
+
+      deleteTask: async (id) => {
+        set({ loading: true, error: null });
+        try {
+          await deleteTask(id);
+          set({
+            tasks: get().tasks.filter((t) => t._id !== id),
+            loading: false,
+          });
+        } catch (err) {
+          set({ error: err.message, loading: false });
+        }
+      },
+
+      clear: () => set({ tasks: [], error: null }),
+    }),
+    {
+      name: "task-storage",
+      partialize: (state) => ({ tasks: state.tasks }),
+    },
+  ),
+);
