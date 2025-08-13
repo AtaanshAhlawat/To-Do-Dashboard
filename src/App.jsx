@@ -247,6 +247,31 @@ function App() {
     updateTaskStatus(taskId, newStatus);
   };
 
+  // Toggle task priority
+  const toggleTaskPriority = (taskId) => {
+    const task = tasks.find((t) => t._id === taskId);
+    if (!task) return;
+
+    const currentPriority = task.priority || "normal";
+    let newPriority;
+
+    switch (currentPriority) {
+      case "low":
+        newPriority = "normal";
+        break;
+      case "normal":
+        newPriority = "high";
+        break;
+      case "high":
+        newPriority = "low";
+        break;
+      default:
+        newPriority = "normal";
+    }
+
+    updateTaskStore(taskId, { priority: newPriority });
+  };
+
   // Format date to 'Tue Aug 12 6:24 PM' format
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -422,15 +447,6 @@ function App() {
     }, 200);
   };
 
-  // Add missing functions
-  const startEditing = (taskId, text, description, tags) => {
-    setEditingId(taskId);
-    setEditingText(text);
-    setEditingDescription(description || "");
-    setEditingTags([...(tags || [])]);
-    setShowAdd(true);
-  };
-
   const saveEdit = async (taskId) => {
     if (!editingText.trim()) return;
 
@@ -438,6 +454,8 @@ function App() {
       text: editingText.trim(),
       description: editingDescription.trim(),
       tags: editingTags,
+      deadline: editingDeadline,
+      priority: editingPriority,
     };
 
     try {
@@ -446,6 +464,8 @@ function App() {
       setEditingText("");
       setEditingDescription("");
       setEditingTags([]);
+      setEditingDeadline("");
+      setEditingPriority("normal");
     } catch (error) {
       console.error("Error updating task:", error);
       setUIError("Failed to update task. Please try again.");
@@ -540,42 +560,13 @@ function App() {
         (task.tags &&
           tagFilter.every((filterTag) => task.tags.includes(filterTag)));
 
-      // Apply completion filter
-      let completionMatch = true;
-      if (filter === "active") {
-        completionMatch =
-          (taskStatus[task._id] || TASK_STATUS.PENDING) !==
-          TASK_STATUS.COMPLETED;
-      } else if (filter === "completed") {
-        completionMatch =
-          (taskStatus[task._id] || TASK_STATUS.PENDING) ===
-          TASK_STATUS.COMPLETED;
-      }
-
-      return searchMatch && tagMatch && completionMatch;
+      return searchMatch && tagMatch;
     })
     .sort((a, b) => {
       const indexA = taskOrder.indexOf(a._id);
       const indexB = taskOrder.indexOf(b._id);
       return indexA - indexB;
     });
-
-  const tagTasks =
-    tagFilter.length === 0
-      ? tasks
-      : tasks.filter(
-          (t) => t.tags && t.tags.some((tag) => tagFilter.includes(tag)),
-        );
-
-  const tagActive = tagTasks.filter(
-    (t) => (taskStatus[t._id] || TASK_STATUS.PENDING) !== TASK_STATUS.COMPLETED,
-  ).length;
-  const tagComplete = tagTasks.filter(
-    (t) => (taskStatus[t._id] || TASK_STATUS.PENDING) === TASK_STATUS.COMPLETED,
-  ).length;
-  const tagPercent = tagTasks.length
-    ? Math.round((tagComplete / tagTasks.length) * 100)
-    : 0;
 
   // Color variables
   const blue = "#2563eb";
@@ -1067,7 +1058,7 @@ function App() {
             }}
           >
             <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-              {["all", "active", "completed"].map((filterType) => (
+              {["all"].map((filterType) => (
                 <button
                   key={filterType}
                   onClick={() => setFilter(filterType)}
@@ -1085,11 +1076,7 @@ function App() {
                     cursor: "pointer",
                   }}
                 >
-                  {filterType === "all"
-                    ? "All"
-                    : filterType === "active"
-                      ? "Pending"
-                      : "Completed"}
+                  All Tasks
                 </button>
               ))}
             </div>
@@ -1202,6 +1189,19 @@ function App() {
                         fontSize: "0.9rem",
                         textTransform: "uppercase",
                         letterSpacing: "0.05em",
+                        width: "120px",
+                      }}
+                    >
+                      Priority
+                    </th>
+                    <th
+                      style={{
+                        textAlign: "left",
+                        padding: "1rem 1.5rem",
+                        fontWeight: 600,
+                        fontSize: "0.9rem",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.05em",
                         minWidth: "200px",
                       }}
                     >
@@ -1252,6 +1252,26 @@ function App() {
                   {filteredTasks.map((task, index) => {
                     const status = taskStatus[task._id] || TASK_STATUS.PENDING;
                     const statusColor = STATUS_COLORS[status] || "#64748b";
+                    const priority = task.priority || "normal";
+                    const priorityColors = {
+                      high: {
+                        bg: "#fef3c7",
+                        color: "#f59e0b",
+                        border: "#f59e0b",
+                      }, // Energizing golden yellow
+                      normal: {
+                        bg: "#e0f2fe",
+                        color: "#0369a1",
+                        border: "#0369a1",
+                      },
+                      low: {
+                        bg: "#f0fdf4",
+                        color: "#16a34a",
+                        border: "#16a34a",
+                      },
+                    };
+                    const priorityColor =
+                      priorityColors[priority] || priorityColors.normal;
 
                     return (
                       <tr
@@ -1312,23 +1332,82 @@ function App() {
                             verticalAlign: "middle",
                           }}
                         >
-                          <span
+                          <div
                             style={{
-                              textDecoration:
-                                status === TASK_STATUS.COMPLETED
-                                  ? "line-through"
-                                  : "none",
-                              color:
-                                status === TASK_STATUS.COMPLETED
-                                  ? "#94a3b8"
-                                  : "#1e293b",
-                              fontWeight: 500,
-                              fontSize: "1rem",
-                              lineHeight: 1.5,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "1rem",
                             }}
                           >
-                            {task.text}
-                          </span>
+                            <span
+                              style={{
+                                textDecoration:
+                                  status === TASK_STATUS.COMPLETED
+                                    ? "line-through"
+                                    : "none",
+                                color:
+                                  status === TASK_STATUS.COMPLETED
+                                    ? "#94a3b8"
+                                    : "#1e293b",
+                                fontWeight: 500,
+                                fontSize: "1rem",
+                                lineHeight: 1.5,
+                                flex: 1,
+                              }}
+                            >
+                              {task.text}
+                            </span>
+                          </div>
+                        </td>
+                        <td
+                          style={{
+                            padding: "1rem 1.5rem",
+                            borderBottom: "1px solid #f1f5f9",
+                            verticalAlign: "middle",
+                          }}
+                        >
+                          <div
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleTaskPriority(task._id);
+                            }}
+                            style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "0.5rem",
+                              background: priorityColor.bg,
+                              color: priorityColor.color,
+                              padding: "0.375rem 0.75rem",
+                              borderRadius: "9999px",
+                              fontSize: "0.85rem",
+                              fontWeight: 600,
+                              border: `1px solid ${priorityColor.border}20`,
+                              textTransform: "capitalize",
+                              cursor: "pointer",
+                              transition: "all 0.2s",
+                            }}
+                            title="Click to change priority"
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = "scale(1.05)";
+                              e.currentTarget.style.boxShadow =
+                                "0 2px 8px rgba(0,0,0,0.15)";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = "scale(1)";
+                              e.currentTarget.style.boxShadow = "none";
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: "8px",
+                                height: "8px",
+                                borderRadius: "50%",
+                                background: priorityColor.color,
+                                flexShrink: 0,
+                              }}
+                            />
+                            {priority}
+                          </div>
                         </td>
                         <td
                           style={{
@@ -1862,125 +1941,105 @@ function App() {
                               {/* Dropdown menu */}
                               {showTaskMenu === task._id && (
                                 <div
+                                  data-task-menu
                                   style={{
-                                    position: "fixed",
-                                    top: 0,
-                                    left: 0,
+                                    position: "absolute",
+                                    top: "100%",
                                     right: 0,
-                                    bottom: 0,
+                                    marginTop: "0.5rem",
+                                    background: "#fff",
+                                    borderRadius: "0.75rem",
+                                    boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+                                    padding: "0.75rem",
+                                    minWidth: "180px",
                                     zIndex: 999999,
-                                    background: "rgba(0, 0, 0, 0.1)",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
+                                    border: "1px solid #e5e7eb",
                                   }}
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    setShowTaskMenu(null);
                                   }}
                                 >
                                   <div
-                                    data-task-menu
                                     style={{
-                                      background: "#fff",
-                                      borderRadius: "0.75rem",
-                                      boxShadow:
-                                        "0 20px 25px -5px rgba(0, 0, 0, 0.3)",
-                                      padding: "1rem",
-                                      minWidth: "200px",
-                                      border: "1px solid #e5e7eb",
-                                    }}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
+                                      fontWeight: 600,
+                                      fontSize: "0.9rem",
+                                      color: "#374151",
+                                      marginBottom: "0.75rem",
+                                      textAlign: "center",
                                     }}
                                   >
-                                    <div
-                                      style={{
-                                        fontWeight: 600,
-                                        fontSize: "1rem",
-                                        color: "#374151",
-                                        marginBottom: "1rem",
-                                        textAlign: "center",
-                                      }}
-                                    >
-                                      Task Options
-                                    </div>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setShowTaskMenu(null);
-                                        startEditing(
-                                          task._id,
-                                          task.text,
-                                          task.description,
-                                          task.tags,
-                                        );
-                                      }}
-                                      style={{
-                                        width: "100%",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "0.5rem",
-                                        padding: "0.5rem 0.75rem",
-                                        background: "transparent",
-                                        border: "none",
-                                        borderRadius: "0.5rem",
-                                        color: "#374151",
-                                        cursor: "pointer",
-                                        fontSize: "0.9rem",
-                                        transition: "all 0.2s",
-                                        textAlign: "left",
-                                      }}
-                                      onMouseEnter={(e) => {
-                                        e.currentTarget.style.background =
-                                          "#f8fafc";
-                                        e.currentTarget.style.color = blue;
-                                      }}
-                                      onMouseLeave={(e) => {
-                                        e.currentTarget.style.background =
-                                          "transparent";
-                                        e.currentTarget.style.color = "#374151";
-                                      }}
-                                    >
-                                      <Edit2 size={16} />
-                                      Edit Task
-                                    </button>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setShowTaskMenu(null);
-                                        handleDeleteTask(task._id);
-                                      }}
-                                      style={{
-                                        width: "100%",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "0.5rem",
-                                        padding: "0.5rem 0.75rem",
-                                        background: "transparent",
-                                        border: "none",
-                                        borderRadius: "0.5rem",
-                                        color: "#374151",
-                                        cursor: "pointer",
-                                        fontSize: "0.9rem",
-                                        transition: "all 0.2s",
-                                        textAlign: "left",
-                                      }}
-                                      onMouseEnter={(e) => {
-                                        e.currentTarget.style.background =
-                                          "#fef2f2";
-                                        e.currentTarget.style.color = "#ef4444";
-                                      }}
-                                      onMouseLeave={(e) => {
-                                        e.currentTarget.style.background =
-                                          "transparent";
-                                        e.currentTarget.style.color = "#374151";
-                                      }}
-                                    >
-                                      <Trash2 size={16} />
-                                      Delete Task
-                                    </button>
+                                    Task Options
                                   </div>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setShowTaskMenu(null);
+                                      handleEditClick(task);
+                                    }}
+                                    style={{
+                                      width: "100%",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "0.5rem",
+                                      padding: "0.5rem 0.75rem",
+                                      background: "transparent",
+                                      border: "none",
+                                      borderRadius: "0.5rem",
+                                      color: "#374151",
+                                      cursor: "pointer",
+                                      fontSize: "0.9rem",
+                                      transition: "all 0.2s",
+                                      textAlign: "left",
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.background =
+                                        "#f8fafc";
+                                      e.currentTarget.style.color = blue;
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.background =
+                                        "transparent";
+                                      e.currentTarget.style.color = "#374151";
+                                    }}
+                                  >
+                                    <Edit2 size={16} />
+                                    Edit Task
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setShowTaskMenu(null);
+                                      handleDeleteTask(task._id);
+                                    }}
+                                    style={{
+                                      width: "100%",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "0.5rem",
+                                      padding: "0.5rem 0.75rem",
+                                      background: "transparent",
+                                      border: "none",
+                                      borderRadius: "0.5rem",
+                                      color: "#374151",
+                                      cursor: "pointer",
+                                      fontSize: "0.9rem",
+                                      transition: "all 0.2s",
+                                      textAlign: "left",
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.background =
+                                        "#fef2f2";
+                                      e.currentTarget.style.color = "#ef4444";
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.background =
+                                        "transparent";
+                                      e.currentTarget.style.color = "#374151";
+                                    }}
+                                  >
+                                    <Trash2 size={16} />
+                                    Delete Task
+                                  </button>
                                 </div>
                               )}
                             </div>
