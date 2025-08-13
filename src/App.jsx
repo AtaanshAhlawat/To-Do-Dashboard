@@ -74,9 +74,6 @@ function App() {
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
 
-  // Get all unique tags from tasks
-  const allTags = [...new Set(tasks.flatMap((task) => task.tags || []))];
-
   // Toggle tag in filter
   const toggleTagFilter = (tag) => {
     setTagFilter((prev) =>
@@ -202,7 +199,7 @@ function App() {
       }
     });
     setTaskStatus((prev) => ({ ...prev, ...statuses }));
-  }, [tasks]);
+  }, [tasks, taskStatus]);
 
   // Initialize task order
   useEffect(() => {
@@ -376,11 +373,11 @@ function App() {
       };
 
       try {
-        const newTask = await addTaskStore(taskData);
+        const createdTask = await addTaskStore(taskData);
 
         // Add new task to order at the top
-        if (newTask && newTask._id) {
-          setTaskOrder((prev) => [newTask._id, ...prev]);
+        if (createdTask && createdTask._id) {
+          setTaskOrder((prev) => [createdTask._id, ...prev]);
         }
 
         // Reset form and close modal
@@ -470,24 +467,6 @@ function App() {
       console.error("Error updating task:", error);
       setUIError("Failed to update task. Please try again.");
     }
-  };
-
-  // Move task up/down
-  const moveTask = (taskId, direction) => {
-    const currentIndex = taskOrder.indexOf(taskId);
-    if (currentIndex === -1) return;
-
-    const newOrder = [...taskOrder];
-    const newIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-
-    if (newIndex < 0 || newIndex >= newOrder.length) return;
-
-    // Swap positions
-    [newOrder[currentIndex], newOrder[newIndex]] = [
-      newOrder[newIndex],
-      newOrder[currentIndex],
-    ];
-    setTaskOrder(newOrder);
   };
 
   // Drag and drop handlers
@@ -1258,7 +1237,7 @@ function App() {
                         bg: "#fef3c7",
                         color: "#f59e0b",
                         border: "#f59e0b",
-                      }, // Energizing golden yellow
+                      },
                       normal: {
                         bg: "#e0f2fe",
                         color: "#0369a1",
@@ -1572,10 +1551,6 @@ function App() {
                                       right: 0,
                                       bottom: 0,
                                       zIndex: 999999,
-                                      background: "rgba(0, 0, 0, 0.3)",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
                                     }}
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -1583,144 +1558,166 @@ function App() {
                                     }}
                                   >
                                     <div
-                                      data-tag-dropdown
                                       style={{
-                                        background: "#fff",
-                                        borderRadius: "0.75rem",
-                                        boxShadow:
-                                          "0 20px 25px -5px rgba(0, 0, 0, 0.2)",
-                                        padding: "1rem",
-                                        minWidth: "300px",
-                                        maxHeight: "400px",
-                                        overflowY: "auto",
-                                        border: "1px solid #e5e7eb",
+                                        position: "fixed",
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        bottom: 0,
+                                        background: "rgba(0, 0, 0, 0.3)",
+                                        zIndex: -1,
                                       }}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
+                                    />
+                                    <div
+                                      style={{
+                                        position: "absolute",
+                                        top: "50%",
+                                        left: "50%",
+                                        transform: "translate(-50%, -50%)",
+                                        zIndex: 1000000,
                                       }}
                                     >
                                       <div
+                                        data-tag-dropdown
                                         style={{
-                                          display: "flex",
-                                          justifyContent: "space-between",
-                                          alignItems: "center",
-                                          marginBottom: "1rem",
-                                          paddingBottom: "0.5rem",
-                                          borderBottom: "1px solid #f3f4f6",
+                                          background: "#fff",
+                                          borderRadius: "0.75rem",
+                                          boxShadow:
+                                            "0 20px 25px -5px rgba(0, 0, 0, 0.2)",
+                                          padding: "1rem",
+                                          minWidth: "300px",
+                                          maxWidth: "350px",
+                                          maxHeight: "400px",
+                                          overflowY: "auto",
+                                          border: "1px solid #e5e7eb",
+                                        }}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
                                         }}
                                       >
                                         <div
                                           style={{
-                                            fontWeight: 600,
-                                            fontSize: "1rem",
-                                            color: "#374151",
-                                          }}
-                                        >
-                                          Add Tags to Task
-                                        </div>
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setShowTagDropdown(null);
-                                          }}
-                                          style={{
-                                            background: "none",
-                                            border: "none",
-                                            color: "#6b7280",
-                                            cursor: "pointer",
-                                            padding: "0.25rem",
-                                            borderRadius: "0.25rem",
                                             display: "flex",
+                                            justifyContent: "space-between",
                                             alignItems: "center",
-                                            justifyContent: "center",
+                                            marginBottom: "1rem",
+                                            paddingBottom: "0.5rem",
+                                            borderBottom: "1px solid #f3f4f6",
                                           }}
                                         >
-                                          <X size={20} />
-                                        </button>
-                                      </div>
-                                      <div
-                                        style={{
-                                          maxHeight: "250px",
-                                          overflowY: "auto",
-                                        }}
-                                      >
-                                        {tags.map((tag) => (
                                           <div
-                                            key={tag}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              toggleTaskTag(task._id, tag);
-                                            }}
                                             style={{
-                                              padding: "0.75rem",
-                                              borderRadius: "0.5rem",
-                                              cursor: "pointer",
-                                              display: "flex",
-                                              alignItems: "center",
-                                              gap: "0.75rem",
-                                              transition: "all 0.2s",
-                                              marginBottom: "0.25rem",
-                                            }}
-                                            onMouseEnter={(e) => {
-                                              e.currentTarget.style.background =
-                                                "#f8fafc";
-                                            }}
-                                            onMouseLeave={(e) => {
-                                              e.currentTarget.style.background =
-                                                "transparent";
+                                              fontWeight: 600,
+                                              fontSize: "1rem",
+                                              color: "#374151",
                                             }}
                                           >
-                                            <input
-                                              type="checkbox"
-                                              checked={
-                                                task.tags &&
-                                                task.tags.includes(tag)
-                                              }
-                                              readOnly
-                                              style={{
-                                                width: "18px",
-                                                height: "18px",
-                                                cursor: "pointer",
-                                                accentColor: blue,
-                                              }}
-                                            />
-                                            <span
-                                              style={{
-                                                fontSize: "0.95rem",
-                                                color: "#374151",
-                                              }}
-                                            >
-                                              {tag}
-                                            </span>
+                                            Add Tags to Task
                                           </div>
-                                        ))}
-                                      </div>
-                                      <div
-                                        style={{
-                                          marginTop: "1rem",
-                                          paddingTop: "0.75rem",
-                                          borderTop: "1px solid #f3f4f6",
-                                          textAlign: "center",
-                                        }}
-                                      >
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setShowTagDropdown(null);
-                                          }}
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setShowTagDropdown(null);
+                                            }}
+                                            style={{
+                                              background: "none",
+                                              border: "none",
+                                              color: "#6b7280",
+                                              cursor: "pointer",
+                                              padding: "0.25rem",
+                                              borderRadius: "0.25rem",
+                                              display: "flex",
+                                              alignItems: "center",
+                                              justifyContent: "center",
+                                            }}
+                                          >
+                                            <X size={20} />
+                                          </button>
+                                        </div>
+                                        <div
                                           style={{
-                                            background: blueGradient,
-                                            color: "#fff",
-                                            border: "none",
-                                            borderRadius: "0.5rem",
-                                            padding: "0.5rem 1.5rem",
-                                            fontSize: "0.9rem",
-                                            fontWeight: 600,
-                                            cursor: "pointer",
+                                            maxHeight: "250px",
+                                            overflowY: "auto",
                                           }}
                                         >
-                                          Done
-                                        </button>
+                                          {tags.map((tag) => (
+                                            <div
+                                              key={tag}
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleTaskTag(task._id, tag);
+                                              }}
+                                              style={{
+                                                padding: "0.75rem",
+                                                borderRadius: "0.5rem",
+                                                cursor: "pointer",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: "0.75rem",
+                                                transition: "all 0.2s",
+                                                marginBottom: "0.25rem",
+                                              }}
+                                              onMouseEnter={(e) => {
+                                                e.currentTarget.style.background =
+                                                  "#f8fafc";
+                                              }}
+                                              onMouseLeave={(e) => {
+                                                e.currentTarget.style.background =
+                                                  "transparent";
+                                              }}
+                                            >
+                                              <input
+                                                type="checkbox"
+                                                checked={
+                                                  task.tags &&
+                                                  task.tags.includes(tag)
+                                                }
+                                                readOnly
+                                                style={{
+                                                  width: "18px",
+                                                  height: "18px",
+                                                  cursor: "pointer",
+                                                  accentColor: blue,
+                                                }}
+                                              />
+                                              <span
+                                                style={{
+                                                  fontSize: "0.95rem",
+                                                  color: "#374151",
+                                                }}
+                                              >
+                                                {tag}
+                                              </span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                        <div
+                                          style={{
+                                            marginTop: "1rem",
+                                            paddingTop: "0.75rem",
+                                            borderTop: "1px solid #f3f4f6",
+                                            textAlign: "center",
+                                          }}
+                                        >
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setShowTagDropdown(null);
+                                            }}
+                                            style={{
+                                              background: blueGradient,
+                                              color: "#fff",
+                                              border: "none",
+                                              borderRadius: "0.5rem",
+                                              padding: "0.5rem 1.5rem",
+                                              fontSize: "0.9rem",
+                                              fontWeight: 600,
+                                              cursor: "pointer",
+                                            }}
+                                          >
+                                            Done
+                                          </button>
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
@@ -1941,105 +1938,139 @@ function App() {
                               {/* Dropdown menu */}
                               {showTaskMenu === task._id && (
                                 <div
-                                  data-task-menu
                                   style={{
-                                    position: "absolute",
-                                    top: "100%",
+                                    position: "fixed",
+                                    top: 0,
+                                    left: 0,
                                     right: 0,
-                                    marginTop: "0.5rem",
-                                    background: "#fff",
-                                    borderRadius: "0.75rem",
-                                    boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-                                    padding: "0.75rem",
-                                    minWidth: "180px",
+                                    bottom: 0,
                                     zIndex: 999999,
-                                    border: "1px solid #e5e7eb",
                                   }}
                                   onClick={(e) => {
                                     e.stopPropagation();
+                                    setShowTaskMenu(null);
                                   }}
                                 >
                                   <div
                                     style={{
-                                      fontWeight: 600,
-                                      fontSize: "0.9rem",
-                                      color: "#374151",
-                                      marginBottom: "0.75rem",
-                                      textAlign: "center",
+                                      position: "fixed",
+                                      top: 0,
+                                      left: 0,
+                                      right: 0,
+                                      bottom: 0,
+                                      background: "rgba(0, 0, 0, 0.3)",
+                                      zIndex: -1,
+                                    }}
+                                  />
+                                  <div
+                                    style={{
+                                      position: "absolute",
+                                      top: "50%",
+                                      left: "50%",
+                                      transform: "translate(-50%, -50%)",
+                                      zIndex: 1000000,
                                     }}
                                   >
-                                    Task Options
+                                    <div
+                                      data-task-menu
+                                      style={{
+                                        background: "#fff",
+                                        borderRadius: "0.75rem",
+                                        boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+                                        padding: "0.75rem",
+                                        minWidth: "180px",
+                                        border: "1px solid #e5e7eb",
+                                      }}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                      }}
+                                    >
+                                      <div
+                                        style={{
+                                          fontWeight: 600,
+                                          fontSize: "0.9rem",
+                                          color: "#374151",
+                                          marginBottom: "0.75rem",
+                                          textAlign: "center",
+                                        }}
+                                      >
+                                        Task Options
+                                      </div>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setShowTaskMenu(null);
+                                          handleEditClick(task);
+                                        }}
+                                        style={{
+                                          width: "100%",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: "0.5rem",
+                                          padding: "0.5rem 0.75rem",
+                                          background: "transparent",
+                                          border: "none",
+                                          borderRadius: "0.5rem",
+                                          color: "#374151",
+                                          cursor: "pointer",
+                                          fontSize: "0.9rem",
+                                          transition: "all 0.2s",
+                                          textAlign: "left",
+                                        }}
+                                        onMouseEnter={(e) => {
+                                          e.currentTarget.style.background =
+                                            "#f8fafc";
+                                          e.currentTarget.style.color = blue;
+                                        }}
+                                        onMouseLeave={(e) => {
+                                          e.currentTarget.style.background =
+                                            "transparent";
+                                          e.currentTarget.style.color =
+                                            "#374151";
+                                        }}
+                                      >
+                                        <Edit2 size={16} />
+                                        Edit Task
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setShowTaskMenu(null);
+                                          handleDeleteTask(task._id);
+                                        }}
+                                        style={{
+                                          width: "100%",
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: "0.5rem",
+                                          padding: "0.5rem 0.75rem",
+                                          background: "transparent",
+                                          border: "none",
+                                          borderRadius: "0.5rem",
+                                          color: "#374151",
+                                          cursor: "pointer",
+                                          fontSize: "0.9rem",
+                                          transition: "all 0.2s",
+                                          textAlign: "left",
+                                        }}
+                                        onMouseEnter={(e) => {
+                                          e.currentTarget.style.background =
+                                            "#fef2f2";
+                                          e.currentTarget.style.color =
+                                            "#ef4444";
+                                        }}
+                                        onMouseLeave={(e) => {
+                                          e.currentTarget.style.background =
+                                            "transparent";
+                                          e.currentTarget.style.color =
+                                            "#374151";
+                                        }}
+                                      >
+                                        <Trash2 size={16} />
+                                        Delete Task
+                                      </button>
+                                    </div>
                                   </div>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setShowTaskMenu(null);
-                                      handleEditClick(task);
-                                    }}
-                                    style={{
-                                      width: "100%",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: "0.5rem",
-                                      padding: "0.5rem 0.75rem",
-                                      background: "transparent",
-                                      border: "none",
-                                      borderRadius: "0.5rem",
-                                      color: "#374151",
-                                      cursor: "pointer",
-                                      fontSize: "0.9rem",
-                                      transition: "all 0.2s",
-                                      textAlign: "left",
-                                    }}
-                                    onMouseEnter={(e) => {
-                                      e.currentTarget.style.background =
-                                        "#f8fafc";
-                                      e.currentTarget.style.color = blue;
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      e.currentTarget.style.background =
-                                        "transparent";
-                                      e.currentTarget.style.color = "#374151";
-                                    }}
-                                  >
-                                    <Edit2 size={16} />
-                                    Edit Task
-                                  </button>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setShowTaskMenu(null);
-                                      handleDeleteTask(task._id);
-                                    }}
-                                    style={{
-                                      width: "100%",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: "0.5rem",
-                                      padding: "0.5rem 0.75rem",
-                                      background: "transparent",
-                                      border: "none",
-                                      borderRadius: "0.5rem",
-                                      color: "#374151",
-                                      cursor: "pointer",
-                                      fontSize: "0.9rem",
-                                      transition: "all 0.2s",
-                                      textAlign: "left",
-                                    }}
-                                    onMouseEnter={(e) => {
-                                      e.currentTarget.style.background =
-                                        "#fef2f2";
-                                      e.currentTarget.style.color = "#ef4444";
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      e.currentTarget.style.background =
-                                        "transparent";
-                                      e.currentTarget.style.color = "#374151";
-                                    }}
-                                  >
-                                    <Trash2 size={16} />
-                                    Delete Task
-                                  </button>
                                 </div>
                               )}
                             </div>
@@ -2060,7 +2091,6 @@ function App() {
                 width: "100%",
               }}
             >
-              {console.log("TASKS FOR RENDER", tasks)}
               {filteredTasks.map((task) => {
                 const status = taskStatus[task._id] || TASK_STATUS.PENDING;
                 const statusColor = STATUS_COLORS[status] || "#64748b";
@@ -2111,13 +2141,6 @@ function App() {
                         e.currentTarget.style.boxShadow =
                           "0 12px 40px rgba(37, 99, 235, 0.3)";
                       }
-
-                      // Show status on hover
-                      const statusElement =
-                        e.currentTarget.querySelector(".task-status-hover");
-                      if (statusElement) {
-                        statusElement.style.transform = "translateX(0)";
-                      }
                     }}
                     onMouseLeave={(e) => {
                       if (draggedTask !== task._id) {
@@ -2125,812 +2148,115 @@ function App() {
                         e.currentTarget.style.boxShadow =
                           "0 8px 32px rgba(37, 99, 235, 0.2)";
                       }
-
-                      // Hide status on mouse leave
-                      const statusElement =
-                        e.currentTarget.querySelector(".task-status-hover");
-                      if (statusElement) {
-                        statusElement.style.transform = "translateX(100%)";
-                      }
                     }}
                   >
-                    {/* Status hover indicator */}
                     <div
-                      className="task-status-hover"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "1rem",
+                        width: "100%",
+                      }}
+                    >
+                      <div
+                        style={{
+                          flex: 1, fontWeight: 700,
+                          fontSize: "1.2rem",
+                          lineHeight: 1.4,
+                          textDecoration:
+                            status === TASK_STATUS.COMPLETED
+                              ? "line-through"
+                              : "none",
+                          opacity: status === TASK_STATUS.COMPLETED ? 0.7 : 1,
+                        }}
+                      >
+                        {task.text}
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 6,
+                          position: "relative",
+                        }}
+                      >
+                        {(() => {
+                          const tags = Array.isArray(task.tags)
+                            ? task.tags
+                            : [];
+                          if (tags.length > 0) {
+                            return (
+                              <>
+                                {tags.slice(0, 2).map((tag) => (
+                                  <span
+                                    key={tag}
+                                    style={{
+                                      background: "#fff",
+                                      color: blue,
+                                      fontWeight: 700,
+                                      borderRadius: "0.75rem",
+                                      padding: "0.3rem 0.8rem",
+                                      fontSize: "0.9rem",
+                                      whiteSpace: "nowrap",
+                                    }}
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
+                                {tags.length > 2 && (
+                                  <span
+                                    style={{
+                                      background: "#ffffff40",
+                                      border: "none",
+                                      borderRadius: "9999px",
+                                      width: "28px",
+                                      height: "28px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      color: "white",
+                                      fontWeight: 700,
+                                      fontSize: "0.8rem",
+                                    }}
+                                  >
+                                    +{tags.length - 2}
+                                  </span>
+                                )}
+                              </>
+                            );
+                          }
+                          return (
+                            <span
+                              style={{
+                                background: "#ffffff40",
+                                padding: "0.25rem 0.75rem",
+                                borderRadius: "0.5rem",
+                                fontSize: "0.8rem",
+                                opacity: 0.7,
+                              }}
+                            >
+                              No tags
+                            </span>
+                          );
+                        })()}
+                      </div>
+                    </div>
+
+                    {/* Status indicator */}
+                    <div
                       style={{
                         position: "absolute",
                         top: "1rem",
-                        right: 0,
+                        right: "1rem",
                         background: statusColor,
                         color: "white",
-                        padding: "0.25rem 1rem",
-                        borderTopLeftRadius: "9999px",
-                        borderBottomLeftRadius: "9999px",
-                        fontSize: "0.85rem",
+                        padding: "0.25rem 0.75rem",
+                        borderRadius: "9999px",
+                        fontSize: "0.75rem",
                         fontWeight: 600,
-                        transform: "translateX(100%)",
-                        transition: "transform 0.3s ease",
-                        zIndex: 10,
-                        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleTaskStatus(task._id);
                       }}
                     >
                       {status}
                     </div>
-                    {/* Collapsed view: only show main info */}
-                    {expandedTaskId !== task._id ? (
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "1rem",
-                          width: "100%",
-                        }}
-                      >
-                        <div
-                          style={{
-                            flex: 1,
-                            fontWeight: 700,
-                            fontSize: "1.2rem",
-                            lineHeight: 1.4,
-                            textDecoration:
-                              status === TASK_STATUS.COMPLETED
-                                ? "line-through"
-                                : "none",
-                            opacity: status === TASK_STATUS.COMPLETED ? 0.7 : 1,
-                          }}
-                        >
-                          {task.text}
-                        </div>
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: 6,
-                            position: "relative",
-                          }}
-                        >
-                          {(() => {
-                            const tags = Array.isArray(task.tags)
-                              ? task.tags
-                              : [];
-                            if (tags.length > 0) {
-                              return (
-                                <>
-                                  {tags.slice(0, 2).map((tag) => (
-                                    <span
-                                      key={tag}
-                                      style={{
-                                        background: "#fff",
-                                        color: blue,
-                                        fontWeight: 700,
-                                        borderRadius: "0.75rem",
-                                        padding: "0.3rem 0.8rem",
-                                        fontSize: "0.9rem",
-                                        whiteSpace: "nowrap",
-                                      }}
-                                    >
-                                      {tag}
-                                    </span>
-                                  ))}
-                                  {tags.length > 2 && (
-                                    <div
-                                      style={{
-                                        position: "relative",
-                                        zIndex: 999999,
-                                      }}
-                                    >
-                                      <button
-                                        data-tag-button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setShowTagDropdown(
-                                            showTagDropdown === task._id
-                                              ? null
-                                              : task._id,
-                                          );
-                                        }}
-                                        style={{
-                                          background: "#ffffff40",
-                                          border: "none",
-                                          borderRadius: "9999px",
-                                          width: "28px",
-                                          height: "28px",
-                                          display: "flex",
-                                          alignItems: "center",
-                                          justifyContent: "center",
-                                          cursor: "pointer",
-                                          color: "white",
-                                          fontWeight: 700,
-                                          fontSize: "0.9rem",
-                                          transition: "all 0.2s",
-                                        }}
-                                        onMouseEnter={(e) => {
-                                          e.currentTarget.style.background =
-                                            "#ffffff60";
-                                        }}
-                                        onMouseLeave={(e) => {
-                                          e.currentTarget.style.background =
-                                            "#ffffff40";
-                                        }}
-                                      >
-                                        +{tags.length - 2}
-                                      </button>
-
-                                      {showTagDropdown === task._id && (
-                                        <div
-                                          style={{
-                                            position: "fixed",
-                                            top: 0,
-                                            left: 0,
-                                            right: 0,
-                                            bottom: 0,
-                                            zIndex: 999999,
-                                            background: "rgba(0, 0, 0, 0.3)",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                          }}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setShowTagDropdown(null);
-                                          }}
-                                        >
-                                          <div
-                                            data-tag-dropdown
-                                            style={{
-                                              background: "#fff",
-                                              borderRadius: "0.75rem",
-                                              boxShadow:
-                                                "0 20px 25px -5px rgba(0, 0, 0, 0.2)",
-                                              padding: "1rem",
-                                              minWidth: "300px",
-                                              maxHeight: "400px",
-                                              overflowY: "auto",
-                                              border: "1px solid #e5e7eb",
-                                            }}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                            }}
-                                          >
-                                            <div
-                                              style={{
-                                                display: "flex",
-                                                justifyContent: "space-between",
-                                                alignItems: "center",
-                                                marginBottom: "1rem",
-                                                paddingBottom: "0.5rem",
-                                                borderBottom:
-                                                  "1px solid #f3f4f6",
-                                              }}
-                                            >
-                                              <div
-                                                style={{
-                                                  fontWeight: 600,
-                                                  fontSize: "1rem",
-                                                  color: "#374151",
-                                                }}
-                                              >
-                                                Add Tags to Task
-                                              </div>
-                                              <button
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  setShowTagDropdown(null);
-                                                }}
-                                                style={{
-                                                  background: "none",
-                                                  border: "none",
-                                                  color: "#6b7280",
-                                                  cursor: "pointer",
-                                                  padding: "0.25rem",
-                                                  borderRadius: "0.25rem",
-                                                  display: "flex",
-                                                  alignItems: "center",
-                                                  justifyContent: "center",
-                                                }}
-                                              >
-                                                <X size={20} />
-                                              </button>
-                                            </div>
-                                            <div
-                                              style={{
-                                                maxHeight: "250px",
-                                                overflowY: "auto",
-                                              }}
-                                            >
-                                              {tags.map((tag) => (
-                                                <div
-                                                  key={tag}
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    toggleTaskTag(
-                                                      task._id,
-                                                      tag,
-                                                    );
-                                                  }}
-                                                  style={{
-                                                    padding: "0.75rem",
-                                                    borderRadius: "0.5rem",
-                                                    cursor: "pointer",
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: "0.75rem",
-                                                    transition: "all 0.2s",
-                                                    marginBottom: "0.25rem",
-                                                  }}
-                                                  onMouseEnter={(e) => {
-                                                    e.currentTarget.style.background =
-                                                      "#f8fafc";
-                                                  }}
-                                                  onMouseLeave={(e) => {
-                                                    e.currentTarget.style.background =
-                                                      "transparent";
-                                                  }}
-                                                >
-                                                  <input
-                                                    type="checkbox"
-                                                    checked={
-                                                      task.tags &&
-                                                      task.tags.includes(tag)
-                                                    }
-                                                    readOnly
-                                                    style={{
-                                                      width: "18px",
-                                                      height: "18px",
-                                                      cursor: "pointer",
-                                                      accentColor: blue,
-                                                    }}
-                                                  />
-                                                  <span
-                                                    style={{
-                                                      fontSize: "0.95rem",
-                                                      color: "#374151",
-                                                    }}
-                                                  >
-                                                    {tag}
-                                                  </span>
-                                                </div>
-                                              ))}
-                                            </div>
-                                            <div
-                                              style={{
-                                                marginTop: "1rem",
-                                                paddingTop: "0.75rem",
-                                                borderTop: "1px solid #f3f4f6",
-                                                textAlign: "center",
-                                              }}
-                                            >
-                                              <button
-                                                onClick={(e) => {
-                                                  e.stopPropagation();
-                                                  setShowTagDropdown(null);
-                                                }}
-                                                style={{
-                                                  background: blueGradient,
-                                                  color: "#fff",
-                                                  border: "none",
-                                                  borderRadius: "0.5rem",
-                                                  padding: "0.5rem 1.5rem",
-                                                  fontSize: "0.9rem",
-                                                  fontWeight: 600,
-                                                  cursor: "pointer",
-                                                }}
-                                              >
-                                                Done
-                                              </button>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                </>
-                              );
-                            }
-                            return (
-                              <div
-                                style={{ position: "relative", zIndex: 999999 }}
-                              >
-                                <button
-                                  data-tag-button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowTagDropdown(
-                                      showTagDropdown === task._id
-                                        ? null
-                                        : task._id,
-                                    );
-                                  }}
-                                  style={{
-                                    background: "transparent",
-                                    border: "1px dashed rgba(255,255,255,0.5)",
-                                    borderRadius: "0.5rem",
-                                    padding: "0.25rem 0.75rem",
-                                    color: "rgba(255,255,255,0.9)",
-                                    fontSize: "0.85rem",
-                                    cursor: "pointer",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "0.5rem",
-                                    transition: "all 0.2s",
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    e.currentTarget.style.background =
-                                      "rgba(255,255,255,0.1)";
-                                    e.currentTarget.style.borderColor =
-                                      "rgba(255,255,255,0.7)";
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.background =
-                                      "transparent";
-                                    e.currentTarget.style.borderColor =
-                                      "rgba(255,255,255,0.5)";
-                                  }}
-                                >
-                                  <Plus size={14} />
-                                  Add Tag
-                                </button>
-
-                                {showTagDropdown === task._id && (
-                                  <div
-                                    style={{
-                                      position: "fixed",
-                                      top: 0,
-                                      left: 0,
-                                      right: 0,
-                                      bottom: 0,
-                                      zIndex: 999999,
-                                      background: "rgba(0, 0, 0, 0.3)",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                    }}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setShowTagDropdown(null);
-                                    }}
-                                  >
-                                    <div
-                                      data-tag-dropdown
-                                      style={{
-                                        background: "#fff",
-                                        borderRadius: "0.75rem",
-                                        boxShadow:
-                                          "0 20px 25px -5px rgba(0, 0, 0, 0.2)",
-                                        padding: "1rem",
-                                        minWidth: "300px",
-                                        maxHeight: "400px",
-                                        overflowY: "auto",
-                                        border: "1px solid #e5e7eb",
-                                      }}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                      }}
-                                    >
-                                      <div
-                                        style={{
-                                          display: "flex",
-                                          justifyContent: "space-between",
-                                          alignItems: "center",
-                                          marginBottom: "1rem",
-                                          paddingBottom: "0.5rem",
-                                          borderBottom: "1px solid #f3f4f6",
-                                        }}
-                                      >
-                                        <div
-                                          style={{
-                                            fontWeight: 600,
-                                            fontSize: "1rem",
-                                            color: "#374151",
-                                          }}
-                                        >
-                                          Add Tags to Task
-                                        </div>
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setShowTagDropdown(null);
-                                          }}
-                                          style={{
-                                            background: "none",
-                                            border: "none",
-                                            color: "#6b7280",
-                                            cursor: "pointer",
-                                            padding: "0.25rem",
-                                            borderRadius: "0.25rem",
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                          }}
-                                        >
-                                          <X size={20} />
-                                        </button>
-                                      </div>
-                                      <div
-                                        style={{
-                                          maxHeight: "250px",
-                                          overflowY: "auto",
-                                        }}
-                                      >
-                                        {tags.map((tag) => (
-                                          <div
-                                            key={tag}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              toggleTaskTag(task._id, tag);
-                                            }}
-                                            style={{
-                                              padding: "0.75rem",
-                                              borderRadius: "0.5rem",
-                                              cursor: "pointer",
-                                              display: "flex",
-                                              alignItems: "center",
-                                              gap: "0.75rem",
-                                              transition: "all 0.2s",
-                                              marginBottom: "0.25rem",
-                                            }}
-                                            onMouseEnter={(e) => {
-                                              e.currentTarget.style.background =
-                                                "#f8fafc";
-                                            }}
-                                            onMouseLeave={(e) => {
-                                              e.currentTarget.style.background =
-                                                "transparent";
-                                            }}
-                                          >
-                                            <input
-                                              type="checkbox"
-                                              checked={
-                                                task.tags &&
-                                                task.tags.includes(tag)
-                                              }
-                                              readOnly
-                                              style={{
-                                                width: "18px",
-                                                height: "18px",
-                                                cursor: "pointer",
-                                                accentColor: blue,
-                                              }}
-                                            />
-                                            <span
-                                              style={{
-                                                fontSize: "0.95rem",
-                                                color: "#374151",
-                                              }}
-                                            >
-                                              {tag}
-                                            </span>
-                                          </div>
-                                        ))}
-                                      </div>
-                                      <div
-                                        style={{
-                                          marginTop: "1rem",
-                                          paddingTop: "0.75rem",
-                                          borderTop: "1px solid #f3f4f6",
-                                          textAlign: "center",
-                                        }}
-                                      >
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setShowTagDropdown(null);
-                                          }}
-                                          style={{
-                                            background: blueGradient,
-                                            color: "#fff",
-                                            border: "none",
-                                            borderRadius: "0.5rem",
-                                            padding: "0.5rem 1.5rem",
-                                            fontSize: "0.9rem",
-                                            fontWeight: 600,
-                                            cursor: "pointer",
-                                          }}
-                                        >
-                                          Done
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })()}
-                        </div>
-                      </div>
-                    ) : (
-                      // Expanded view: show all details
-                      <div>
-                        {editingId === task._id ? (
-                          <>
-                            <input
-                              type="text"
-                              value={editingText}
-                              onClick={(e) => e.stopPropagation()}
-                              onChange={(e) => setEditingText(e.target.value)}
-                              placeholder="Task name"
-                              style={{
-                                fontSize: "1.2rem",
-                                fontWeight: 700,
-                                borderRadius: "0.75rem",
-                                border: `2px solid ${blue}`,
-                                padding: "0.75rem 1rem",
-                                marginBottom: 10,
-                                width: "100%",
-                              }}
-                            />
-                            <textarea
-                              value={editingDescription}
-                              onClick={(e) => e.stopPropagation()}
-                              onChange={(e) =>
-                                setEditingDescription(e.target.value)
-                              }
-                              placeholder="Description (optional)"
-                              style={{
-                                fontSize: "1rem",
-                                padding: "0.75rem",
-                                borderRadius: "0.75rem",
-                                border: `2px solid ${blue}`,
-                                width: "100%",
-                                minHeight: 60,
-                                boxSizing: "border-box",
-                                margin: "0.5rem 0",
-                              }}
-                            />
-                            <div
-                              style={{
-                                display: "flex",
-                                gap: 6,
-                                flexWrap: "wrap",
-                                marginBottom: 12,
-                              }}
-                            >
-                              {tags.map((tag) => (
-                                <button
-                                  key={tag}
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setEditingTags(
-                                      editingTags.includes(tag)
-                                        ? editingTags.filter((t) => t !== tag)
-                                        : [...editingTags, tag],
-                                    );
-                                  }}
-                                  style={{
-                                    fontWeight: 700,
-                                    fontSize: "0.95rem",
-                                    padding: "0.3rem 1.1rem",
-                                    borderRadius: "0.75rem",
-                                    border: editingTags.includes(tag)
-                                      ? "none"
-                                      : `2px solid ${blue}`,
-                                    background: editingTags.includes(tag)
-                                      ? blueGradient
-                                      : "#fff",
-                                    color: editingTags.includes(tag)
-                                      ? "#fff"
-                                      : blue,
-                                    boxShadow: editingTags.includes(tag)
-                                      ? blueShadow
-                                      : "none",
-                                    cursor: "pointer",
-                                    marginBottom: 2,
-                                  }}
-                                >
-                                  {tag}
-                                </button>
-                              ))}
-                            </div>
-                            <div
-                              style={{ display: "flex", gap: 8, marginTop: 10 }}
-                            >
-                              <button
-                                onClick={async (e) => {
-                                  e.stopPropagation();
-                                  await saveEdit(task._id);
-                                }}
-                                style={{
-                                  background: blueGradient,
-                                  color: "#fff",
-                                  border: "none",
-                                  borderRadius: "0.5rem",
-                                  padding: "0.6rem 1.4rem",
-                                  fontWeight: 700,
-                                  fontSize: "1rem",
-                                  cursor: "pointer",
-                                }}
-                              >
-                                Save
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  cancelEdit();
-                                }}
-                                style={{
-                                  background: "#fff",
-                                  color: blue,
-                                  border: `2px solid ${blue}`,
-                                  borderRadius: "0.5rem",
-                                  padding: "0.6rem 1.4rem",
-                                  fontWeight: 700,
-                                  fontSize: "1rem",
-                                  cursor: "pointer",
-                                }}
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "1rem",
-                                width: "100%",
-                              }}
-                            >
-                              <div
-                                style={{
-                                  fontWeight: 700,
-                                  fontSize: "1.2rem",
-                                  lineHeight: 1.4,
-                                  textDecoration:
-                                    status === TASK_STATUS.COMPLETED
-                                      ? "line-through"
-                                      : "none",
-                                  opacity:
-                                    status === TASK_STATUS.COMPLETED ? 0.7 : 1,
-                                  flex: 1,
-                                }}
-                              >
-                                {task.text}
-                              </div>
-                            </div>
-                            <div
-                              style={{
-                                display: "flex",
-                                flexWrap: "wrap",
-                                gap: 8,
-                                margin: "0.5rem 0",
-                              }}
-                            >
-                              {(() => {
-                                const tags = Array.isArray(task.tags)
-                                  ? task.tags
-                                  : [];
-                                if (tags.length > 0) {
-                                  return tags.map((tag) => (
-                                    <span
-                                      key={tag}
-                                      style={{
-                                        background: "#fff",
-                                        color: blue,
-                                        fontWeight: 700,
-                                        borderRadius: "0.75rem",
-                                        padding: "0.3rem 1.1rem",
-                                        fontSize: "0.95rem",
-                                        whiteSpace: "nowrap",
-                                        marginBottom: 2,
-                                      }}
-                                    >
-                                      {tag}
-                                    </span>
-                                  ));
-                                }
-                                return (
-                                  <span
-                                    style={{
-                                      background: "#fff",
-                                      color: blue,
-                                      fontWeight: 500,
-                                      borderRadius: "0.75rem",
-                                      padding: "0.3rem 1.1rem",
-                                      fontSize: "0.95rem",
-                                      marginBottom: 2,
-                                      opacity: 0.6,
-                                    }}
-                                  >
-                                    [No tags]
-                                  </span>
-                                );
-                              })()}
-                            </div>
-                            <div
-                              style={{
-                                background: "#fff",
-                                color: blue,
-                                borderRadius: 12,
-                                padding: "1rem",
-                                margin: "0.5rem 0",
-                                fontSize: "1.05rem",
-                                fontWeight: 500,
-                                opacity: 0.95,
-                              }}
-                            >
-                              {(() => {
-                                const description =
-                                  typeof task.description === "string"
-                                    ? task.description
-                                    : "";
-                                return (
-                                  description || (
-                                    <span style={{ opacity: 0.5 }}>
-                                      [No description]
-                                    </span>
-                                  )
-                                );
-                              })()}
-                            </div>
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 12,
-                                marginTop: 8,
-                                flexWrap: "wrap",
-                              }}
-                            >
-                              <span
-                                style={{
-                                  fontSize: "0.85rem",
-                                  opacity: 0.9,
-                                  background: "rgba(255,255,255,0.2)",
-                                  padding: "0.25rem 0.75rem",
-                                  borderRadius: "9999px",
-                                }}
-                              >
-                                {formatDate(task.created)}
-                              </span>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEditClick(task);
-                                }}
-                                style={{
-                                  background: "rgba(255,255,255,0.2)",
-                                  border: "none",
-                                  borderRadius: "0.5rem",
-                                  padding: "0.5rem",
-                                  color: "#fff",
-                                  cursor: "pointer",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                              >
-                                <Edit2 size={18} />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteTask(task._id);
-                                }}
-                                style={{
-                                  background: "rgba(255,255,255,0.2)",
-                                  border: "none",
-                                  borderRadius: "0.5rem",
-                                  padding: "0.5rem",
-                                  color: "#fff",
-                                  cursor: "pointer",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                              >
-                                <Trash2 size={18} />
-                              </button>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    )}
                   </div>
                 );
               })}
