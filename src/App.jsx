@@ -127,7 +127,6 @@ function App() {
   const [newPriority, setNewPriority] = useState("normal");
   const [tags, setTags] = useState(["Personal", "Work", "Urgent"]);
   const [showAdd, setShowAdd] = useState(false);
-  const [filter, setFilter] = useState("all");
   const [editingId, setEditingId] = useState(null);
   const [editingText, setEditingText] = useState("");
   const [editingDescription, setEditingDescription] = useState("");
@@ -136,8 +135,6 @@ function App() {
   const [editingPriority, setEditingPriority] = useState("normal");
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState([]);
-  const [expandedTaskId, setExpandedTaskId] = useState(null);
-  const [viewMode, setViewMode] = useState("table"); // 'table' or 'card'
   const [taskStatus, setTaskStatus] = useState({}); // { taskId: status }
   const [showTagDropdown, setShowTagDropdown] = useState(null); // taskId or null
   const [selectedFilterTags, setSelectedFilterTags] = useState([]);
@@ -894,12 +891,12 @@ function App() {
                           padding: "0.25rem 0.5rem",
                           borderRadius: "0.25rem",
                         }}
-                        onMouseOver={(e) =>
-                          (e.currentTarget.style.background = "#f8fafc")
-                        }
-                        onMouseOut={(e) =>
-                          (e.currentTarget.style.background = "none")
-                        }
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.background = "#f8fafc";
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.background = "none";
+                        }}
                       >
                         Clear all
                       </button>
@@ -1025,77 +1022,6 @@ function App() {
             </div>
           </div>
 
-          {/* View Toggle and Filter Buttons */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexWrap: "wrap",
-              gap: "1rem",
-              marginBottom: "1rem",
-            }}
-          >
-            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-              {["all"].map((filterType) => (
-                <button
-                  key={filterType}
-                  onClick={() => setFilter(filterType)}
-                  style={{
-                    fontSize: "1.1rem",
-                    padding: "0.6rem 1.5rem",
-                    borderRadius: "0.75rem",
-                    fontWeight: 700,
-                    background: filter === filterType ? blueGradient : "#fff",
-                    color: filter === filterType ? "#fff" : blue,
-                    border: `2px solid ${blue}`,
-                    boxShadow: filter === filterType ? blueShadow : "none",
-                    transition: "all 0.2s",
-                    minWidth: "100px",
-                    cursor: "pointer",
-                  }}
-                >
-                  All Tasks
-                </button>
-              ))}
-            </div>
-
-            <div style={{ display: "flex", gap: "0.5rem" }}>
-              <button
-                onClick={() => setViewMode("card")}
-                style={{
-                  padding: "0.6rem 1.2rem",
-                  background: viewMode === "card" ? blueGradient : "#fff",
-                  color: viewMode === "card" ? "#fff" : blue,
-                  border: `2px solid ${blue}`,
-                  borderRadius: "0.75rem",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  opacity: viewMode === "card" ? 1 : 0.7,
-                  transition: "all 0.2s",
-                }}
-              >
-                Card View
-              </button>
-              <button
-                onClick={() => setViewMode("table")}
-                style={{
-                  padding: "0.6rem 1.2rem",
-                  background: viewMode === "table" ? blueGradient : "#fff",
-                  color: viewMode === "table" ? "#fff" : blue,
-                  border: `2px solid ${blue}`,
-                  borderRadius: "0.75rem",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  opacity: viewMode === "table" ? 1 : 0.7,
-                  transition: "all 0.2s",
-                }}
-              >
-                Table View
-              </button>
-            </div>
-          </div>
-
           {/* Tasks Section */}
           {filteredTasks.length === 0 ? (
             <div
@@ -1122,7 +1048,7 @@ function App() {
                 Click on the <strong>+</strong> button to add one
               </p>
             </div>
-          ) : viewMode === "table" ? (
+          ) : (
             <div
               style={{
                 width: "100%",
@@ -1526,8 +1452,7 @@ function App() {
                                     transition: "all 0.2s",
                                   }}
                                   onMouseEnter={(e) => {
-                                    e.currentTarget.style.background =
-                                      "#f8fafc";
+                                    e.currentTarget.style.background = "#f8fafc";
                                     e.currentTarget.style.borderColor =
                                       "#94a3b8";
                                   }}
@@ -2081,185 +2006,6 @@ function App() {
                   })}
                 </tbody>
               </table>
-            </div>
-          ) : (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))",
-                gap: "1.5rem",
-                width: "100%",
-              }}
-            >
-              {filteredTasks.map((task) => {
-                const status = taskStatus[task._id] || TASK_STATUS.PENDING;
-                const statusColor = STATUS_COLORS[status] || "#64748b";
-
-                return (
-                  <div
-                    key={task._id}
-                    draggable="true"
-                    onDragStart={(e) => handleDragStart(e, task._id)}
-                    onDragOver={(e) => handleDragOver(e, task._id)}
-                    onDragLeave={handleDragLeave}
-                    onDrop={(e) => handleDrop(e, task._id)}
-                    onDragEnd={handleDragEnd}
-                    style={{
-                      background:
-                        dragOverTask === task._id ? "#1e40af" : blueGradient,
-                      color: "#fff",
-                      borderRadius: "1.5rem",
-                      fontSize: "1.1rem",
-                      boxShadow:
-                        draggedTask === task._id
-                          ? "0 12px 40px rgba(37, 99, 235, 0.6)"
-                          : "0 8px 32px rgba(37, 99, 235, 0.2)",
-                      padding: expandedTaskId === task._id ? "2rem" : "1.5rem",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "1rem",
-                      minHeight: "80px",
-                      position: "relative",
-                      transition:
-                        "transform 0.2s, box-shadow 0.2s, padding 0.2s",
-                      cursor: draggedTask === task._id ? "grabbing" : "grab",
-                      overflow: "hidden",
-                      opacity: draggedTask === task._id ? 0.7 : 1,
-                      transform:
-                        draggedTask === task._id ? "rotate(5deg)" : "none",
-                      border:
-                        dragOverTask === task._id ? "3px dashed #fff" : "none",
-                    }}
-                    onClick={() =>
-                      setExpandedTaskId(
-                        expandedTaskId === task._id ? null : task._id,
-                      )
-                    }
-                    onMouseEnter={(e) => {
-                      if (draggedTask !== task._id) {
-                        e.currentTarget.style.transform = "translateY(-2px)";
-                        e.currentTarget.style.boxShadow =
-                          "0 12px 40px rgba(37, 99, 235, 0.3)";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (draggedTask !== task._id) {
-                        e.currentTarget.style.transform = "translateY(0)";
-                        e.currentTarget.style.boxShadow =
-                          "0 8px 32px rgba(37, 99, 235, 0.2)";
-                      }
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "1rem",
-                        width: "100%",
-                      }}
-                    >
-                      <div
-                        style={{
-                          flex: 1, fontWeight: 700,
-                          fontSize: "1.2rem",
-                          lineHeight: 1.4,
-                          textDecoration:
-                            status === TASK_STATUS.COMPLETED
-                              ? "line-through"
-                              : "none",
-                          opacity: status === TASK_STATUS.COMPLETED ? 0.7 : 1,
-                        }}
-                      >
-                        {task.text}
-                      </div>
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: 6,
-                          position: "relative",
-                        }}
-                      >
-                        {(() => {
-                          const tags = Array.isArray(task.tags)
-                            ? task.tags
-                            : [];
-                          if (tags.length > 0) {
-                            return (
-                              <>
-                                {tags.slice(0, 2).map((tag) => (
-                                  <span
-                                    key={tag}
-                                    style={{
-                                      background: "#fff",
-                                      color: blue,
-                                      fontWeight: 700,
-                                      borderRadius: "0.75rem",
-                                      padding: "0.3rem 0.8rem",
-                                      fontSize: "0.9rem",
-                                      whiteSpace: "nowrap",
-                                    }}
-                                  >
-                                    {tag}
-                                  </span>
-                                ))}
-                                {tags.length > 2 && (
-                                  <span
-                                    style={{
-                                      background: "#ffffff40",
-                                      border: "none",
-                                      borderRadius: "9999px",
-                                      width: "28px",
-                                      height: "28px",
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                      color: "white",
-                                      fontWeight: 700,
-                                      fontSize: "0.8rem",
-                                    }}
-                                  >
-                                    +{tags.length - 2}
-                                  </span>
-                                )}
-                              </>
-                            );
-                          }
-                          return (
-                            <span
-                              style={{
-                                background: "#ffffff40",
-                                padding: "0.25rem 0.75rem",
-                                borderRadius: "0.5rem",
-                                fontSize: "0.8rem",
-                                opacity: 0.7,
-                              }}
-                            >
-                              No tags
-                            </span>
-                          );
-                        })()}
-                      </div>
-                    </div>
-
-                    {/* Status indicator */}
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: "1rem",
-                        right: "1rem",
-                        background: statusColor,
-                        color: "white",
-                        padding: "0.25rem 0.75rem",
-                        borderRadius: "9999px",
-                        fontSize: "0.75rem",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {status}
-                    </div>
-                  </div>
-                );
-              })}
             </div>
           )}
         </div>
