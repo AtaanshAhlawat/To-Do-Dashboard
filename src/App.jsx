@@ -573,186 +573,6 @@ function App() {
 
   return (
     <>
-      {/* Profile Icon Top Right */}
-      {user && (
-        <div style={{ position: "fixed", top: 24, right: 32, zIndex: 1000 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ position: "relative" }}>
-              <button
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                }}
-                onClick={() => setShowProfileMenu((v) => !v)}
-                aria-label="Profile menu"
-              >
-                <User size={32} color="#18192b" />
-              </button>
-              {showProfileMenu && (
-                <div
-                  ref={profileMenuRef}
-                  style={{
-                    position: "absolute",
-                    top: 50,
-                    right: 0,
-                    background: "#fff",
-                    boxShadow: "0 2px 12px #0001",
-                    borderRadius: 12,
-                    padding: "1rem",
-                    minWidth: 200,
-                    zIndex: 1000,
-                    border: "1px solid #f1f5f9",
-                  }}
-                >
-                  <div
-                    style={{
-                      padding: "0.5rem 0",
-                      borderBottom: "1px solid #f1f5f9",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: "0.9rem",
-                        color: "#64748b",
-                        marginBottom: "0.25rem",
-                      }}
-                    >
-                      Signed in as
-                    </div>
-                    <div
-                      style={{
-                        fontWeight: 600,
-                        fontSize: "1rem",
-                        color: "#1e293b",
-                      }}
-                    >
-                      {user.username || "User"}
-                    </div>
-                  </div>
-
-                  <button
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                      width: "100%",
-                      background: "none",
-                      border: "none",
-                      color: "#64748b",
-                      fontWeight: 500,
-                      cursor: "pointer",
-                      fontSize: "0.95rem",
-                      padding: "0.6rem 0.5rem",
-                      borderRadius: "6px",
-                      transition: "all 0.2s",
-                      textAlign: "left",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "#f8fafc";
-                      e.currentTarget.style.color = "#2563eb";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "none";
-                      e.currentTarget.style.color = "#64748b";
-                    }}
-                    onClick={() => {
-                      setShowProfileMenu(false);
-                      logout();
-                    }}
-                  >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M16 17L21 12L16 7"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                      <path
-                        d="M21 12H9"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    Sign out
-                  </button>
-
-                  <div
-                    style={{
-                      height: "1px",
-                      background: "#f1f5f9",
-                      margin: "0.5rem 0",
-                    }}
-                  ></div>
-
-                  <button
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                      width: "100%",
-                      background: "none",
-                      border: "none",
-                      color: "#ef4444",
-                      fontWeight: 500,
-                      cursor: "pointer",
-                      fontSize: "0.95rem",
-                      padding: "0.6rem 0.5rem",
-                      borderRadius: "6px",
-                      transition: "all 0.2s",
-                      textAlign: "left",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "#fef2f2";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "none";
-                    }}
-                    onClick={() => {
-                      setShowProfileMenu(false);
-                      setShowDeleteAccountModal(true);
-                    }}
-                  >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M19 7L18.1327 19.1425C18.0579 20.1891 17.187 21 16.1378 21H7.86224C6.81296 21 5.94208 20.1891 5.86732 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    Delete account
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       <div
         style={{
@@ -776,227 +596,353 @@ function App() {
             gap: "2rem",
           }}
         >
-          {/* Search and Filter Controls */}
-          <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
-            <input
-              type="text"
-              placeholder="Search for task..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{
-                fontSize: "1rem",
-                padding: "0.75rem 1.25rem",
-                borderRadius: "0.75rem",
-                flex: 1,
-                border: `2px solid ${blueLight}`,
-                background: "#fff",
-                boxSizing: "border-box",
-                minWidth: "200px",
-              }}
-            />
-            <div style={{ position: "relative" }} ref={tagFilterRef}>
-              <button
-                onClick={() => setShowTagFilter(!showTagFilter)}
+          {/* Header with Search, Filter, and Profile */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "1rem",
+              marginBottom: "1rem",
+            }}
+          >
+            {/* Search and Filter Controls */}
+            <div style={{ display: "flex", gap: "1rem", flex: 1 }}>
+              <input
+                type="text"
+                placeholder="Search for task..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.5rem",
-                  background: "#fff",
-                  border: `2px solid ${blueLight}`,
+                  fontSize: "1rem",
+                  padding: "0.75rem 1.25rem",
                   borderRadius: "0.75rem",
-                  padding: "0 1rem",
-                  height: "100%",
-                  cursor: "pointer",
-                  transition: "all 0.2s",
+                  flex: 1,
+                  border: `2px solid #e2e8f0`,
+                  background: "#fff",
+                  boxSizing: "border-box",
+                  minWidth: "200px",
                 }}
-              >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M7 6V3M7 3H3M7 3L12.2 12.6M21 3H11M21 12H15M21 21H12.6M3 3H7M3 12H7M3 21H10.2M10.2 21C10.2 21.9941 9.39411 22.8 8.4 22.8C7.40589 22.8 6.6 21.9941 6.6 21C6.6 20.0059 7.40589 19.2 8.4 19.2C9.39411 19.2 10.2 20.0059 10.2 21ZM17.4 12C17.4 12.9941 16.5941 13.8 15.6 13.8C14.6059 13.8 13.8 12.9941 13.8 12C13.8 11.0059 14.6059 10.2 15.6 10.2C16.5941 10.2 17.4 11.0059 17.4 12ZM7 6C7 6.99411 6.19411 7.8 5.2 7.8C4.20589 7.8 3.4 6.99411 3.4 6C3.4 5.00589 4.20589 4.2 5.2 4.2C6.19411 4.2 7 5.00589 7 6Z"
-                    stroke={blue}
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                <span style={{ whiteSpace: "nowrap" }}>Filter by Tag</span>
-                {tagFilter.length > 0 && (
-                  <span
-                    style={{
-                      background: blue,
-                      color: "white",
-                      borderRadius: "9999px",
-                      fontSize: "0.75rem",
-                      padding: "0.1rem 0.5rem",
-                      marginLeft: "0.25rem",
-                    }}
-                  >
-                    {tagFilter.length}
-                  </span>
-                )}
-              </button>
-
-              {showTagFilter && (
-                <div
+              />
+              <div style={{ position: "relative" }} ref={tagFilterRef}>
+                <button
+                  onClick={() => setShowTagFilter(!showTagFilter)}
                   style={{
-                    position: "absolute",
-                    top: "100%",
-                    right: 0,
-                    marginTop: "0.5rem",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
                     background: "#fff",
+                    border: `2px solid #e2e8f0`,
                     borderRadius: "0.75rem",
-                    boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-                    padding: "0.75rem",
-                    minWidth: "200px",
-                    zIndex: 50,
-                    border: "1px solid #f1f5f9",
-                    maxHeight: "300px",
-                    overflowY: "auto",
+                    padding: "0 1rem",
+                    height: "100%",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
                   }}
                 >
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: "0.5rem",
-                      paddingBottom: "0.5rem",
-                      borderBottom: "1px solid #f1f5f9",
-                    }}
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
                   >
+                    <path
+                      d="M7 6V3M7 3H3M7 3L12.2 12.6M21 3H11M21 12H15M21 21H12.6M3 3H7M3 12H7M3 21H10.2M10.2 21C10.2 21.9941 9.39411 22.8 8.4 22.8C7.40589 22.8 6.6 21.9941 6.6 21C6.6 20.0059 7.40589 19.2 8.4 19.2C9.39411 19.2 10.2 20.0059 10.2 21ZM17.4 12C17.4 12.9941 16.5941 13.8 15.6 13.8C14.6059 13.8 13.8 12.9941 13.8 12C13.8 11.0059 14.6059 10.2 15.6 10.2C16.5941 10.2 17.4 11.0059 17.4 12ZM7 6C7 6.99411 6.19411 7.8 5.2 7.8C4.20589 7.8 3.4 6.99411 3.4 6C3.4 5.00589 4.20589 4.2 5.2 4.2C6.19411 4.2 7 5.00589 7 6Z"
+                      stroke={blue}
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <span style={{ whiteSpace: "nowrap" }}>Filter by Tag</span>
+                  {tagFilter.length > 0 && (
                     <span
                       style={{
-                        fontSize: "0.9rem",
-                        fontWeight: 600,
-                        color: "#1e293b",
+                        background: blue,
+                        color: "white",
+                        borderRadius: "9999px",
+                        fontSize: "0.75rem",
+                        padding: "0.1rem 0.5rem",
+                        marginLeft: "0.25rem",
                       }}
                     >
-                      Filter by Tag
+                      {tagFilter.length}
                     </span>
+                  )}
+                </button>
+
+                {showTagFilter && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "100%",
+                      right: 0,
+                      marginTop: "0.5rem",
+                      background: "#fff",
+                      borderRadius: "0.75rem",
+                      boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+                      padding: "0.75rem",
+                      minWidth: "200px",
+                      zIndex: 1001, // Higher z-index
+                      border: "1px solid #f1f5f9",
+                      maxHeight: "300px",
+                      overflowY: "auto",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: "0.5rem",
+                        paddingBottom: "0.5rem",
+                        borderBottom: "1px solid #f1f5f9",
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: "0.9rem",
+                          fontWeight: 600,
+                          color: "#1e293b",
+                        }}
+                      >
+                        Filter by Tag
+                      </span>
+                      {tagFilter.length > 0 && (
+                        <button
+                          onClick={() => setTagFilter([])}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            color: blue,
+                            fontSize: "0.8rem",
+                            cursor: "pointer",
+                            padding: "0.25rem 0.5rem",
+                            borderRadius: "0.25rem",
+                          }}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.background = "#f8fafc";
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.background = "none";
+                          }}
+                        >
+                          Clear all
+                        </button>
+                      )}
+                    </div>
+
+                    <div
+                      style={{
+                        maxHeight: "200px",
+                        overflowY: "auto",
+                        margin: "0 -0.5rem",
+                      }}
+                    >
+                      {Array.from(
+                        new Set(tasks.flatMap((task) => task.tags || [])),
+                      ).length > 0 ? (
+                        Array.from(
+                          new Set(tasks.flatMap((task) => task.tags || [])),
+                        ).map((tag, index) => (
+                          <div
+                            key={index}
+                            onClick={() => toggleTagFilter(tag)}
+                            style={{
+                              fontSize: "0.85rem",
+                              color: "#64748b",
+                              padding: "0.5rem 0.75rem",
+                              margin: "0.25rem",
+                              borderRadius: "0.5rem",
+                              cursor: "pointer",
+                              transition: "all 0.2s",
+                              backgroundColor: tagFilter.includes(tag)
+                                ? "#e0f2fe"
+                                : "transparent",
+                            }}
+                            onMouseOver={(e) =>
+                              (e.currentTarget.style.backgroundColor =
+                                tagFilter.includes(tag)
+                                  ? "#bae6fd"
+                                  : "#f8fafc")
+                            }
+                            onMouseOut={(e) =>
+                              (e.currentTarget.style.backgroundColor =
+                                tagFilter.includes(tag)
+                                  ? "#e0f2fe"
+                                  : "transparent")
+                            }
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.5rem",
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={tagFilter.includes(tag)}
+                                readOnly
+                                style={{
+                                  width: "1rem",
+                                  height: "1rem",
+                                  cursor: "pointer",
+                                  accentColor: "#3b82f6",
+                                }}
+                              />
+                              <span>{tag}</span>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div
+                          style={{
+                            textAlign: "center",
+                            color: "#94a3b8",
+                            padding: "1rem",
+                            fontSize: "0.9rem",
+                          }}
+                        >
+                          No tags found
+                        </div>
+                      )}
+                    </div>
+
                     {tagFilter.length > 0 && (
                       <button
                         onClick={() => setTagFilter([])}
                         style={{
-                          background: "none",
-                          border: "none",
-                          color: blue,
-                          fontSize: "0.8rem",
+                          width: "100%",
+                          marginTop: "0.75rem",
+                          padding: "0.5rem",
+                          borderRadius: "0.5rem",
+                          border: "1px solid #e2e8f0",
+                          background: "#f8fafc",
+                          color: "#475569",
                           cursor: "pointer",
-                          padding: "0.25rem 0.5rem",
-                          borderRadius: "0.25rem",
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.background = "#f8fafc";
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.background = "none";
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "0.5rem",
                         }}
                       >
-                        Clear all
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M18 6L6 18M6 6L18 18"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        Clear filters
                       </button>
                     )}
                   </div>
+                )}
+              </div>
+            </div>
 
+            {/* Profile Icon */}
+            {user && (
+              <div style={{ position: "relative" }}>
+                <button
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: "0.5rem",
+                    borderRadius: "9999px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "2px solid #e2e8f0",
+                  }}
+                  onClick={() => setShowProfileMenu((v) => !v)}
+                  aria-label="Profile menu"
+                >
+                  <User size={24} color="#18192b" />
+                </button>
+                {showProfileMenu && (
                   <div
+                    ref={profileMenuRef}
                     style={{
-                      maxHeight: "200px",
-                      overflowY: "auto",
-                      margin: "0 -0.5rem",
+                      position: "absolute",
+                      top: "100%",
+                      right: 0,
+                      marginTop: "0.5rem",
+                      background: "#fff",
+                      boxShadow: "0 2px 12px #0001",
+                      borderRadius: 12,
+                      padding: "1rem",
+                      minWidth: 200,
+                      zIndex: 1001, // Higher z-index
+                      border: "1px solid #f1f5f9",
                     }}
                   >
-                    {Array.from(
-                      new Set(tasks.flatMap((task) => task.tags || [])),
-                    ).length > 0 ? (
-                      Array.from(
-                        new Set(tasks.flatMap((task) => task.tags || [])),
-                      ).map((tag, index) => (
-                        <div
-                          key={index}
-                          onClick={() => toggleTagFilter(tag)}
-                          style={{
-                            fontSize: "0.85rem",
-                            color: "#64748b",
-                            padding: "0.5rem 0.75rem",
-                            margin: "0.25rem",
-                            borderRadius: "0.5rem",
-                            cursor: "pointer",
-                            transition: "all 0.2s",
-                            backgroundColor: tagFilter.includes(tag)
-                              ? "#e0f2fe"
-                              : "transparent",
-                          }}
-                          onMouseOver={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              tagFilter.includes(tag) ? "#bae6fd" : "#f8fafc")
-                          }
-                          onMouseOut={(e) =>
-                            (e.currentTarget.style.backgroundColor =
-                              tagFilter.includes(tag)
-                                ? "#e0f2fe"
-                                : "transparent")
-                          }
-                        >
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "0.5rem",
-                            }}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={tagFilter.includes(tag)}
-                              readOnly
-                              style={{
-                                width: "1rem",
-                                height: "1rem",
-                                cursor: "pointer",
-                                accentColor: "#3b82f6",
-                              }}
-                            />
-                            <span>{tag}</span>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
+                    <div
+                      style={{
+                        padding: "0.5rem 0",
+                        borderBottom: "1px solid #f1f5f9",
+                        marginBottom: "0.5rem",
+                      }}
+                    >
                       <div
                         style={{
-                          padding: "0.5rem",
-                          color: "#94a3b8",
-                          textAlign: "center",
-                          fontSize: "0.85rem",
+                          fontSize: "0.9rem",
+                          color: "#64748b",
+                          marginBottom: "0.25rem",
                         }}
                       >
-                        No tags available
+                        Signed in as
                       </div>
-                    )}
-                  </div>
+                      <div
+                        style={{
+                          fontWeight: 600,
+                          fontSize: "1rem",
+                          color: "#1e293b",
+                        }}
+                      >
+                        {user.username || "User"}
+                      </div>
+                    </div>
 
-                  {tagFilter.length > 0 && (
                     <button
-                      onClick={() => setTagFilter([])}
                       style={{
-                        width: "100%",
-                        marginTop: "0.75rem",
-                        padding: "0.5rem",
-                        background: "none",
-                        border: "1px solid #f1f5f9",
-                        borderRadius: "0.5rem",
-                        color: blue,
-                        fontWeight: 500,
-                        cursor: "pointer",
-                        fontSize: "0.85rem",
-                        transition: "all 0.2s",
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "center",
                         gap: "0.5rem",
+                        width: "100%",
+                        background: "none",
+                        border: "none",
+                        color: "#64748b",
+                        fontWeight: 500,
+                        cursor: "pointer",
+                        fontSize: "0.95rem",
+                        padding: "0.6rem 0.5rem",
+                        borderRadius: "6px",
+                        transition: "all 0.2s",
+                        textAlign: "left",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "#f8fafc";
+                        e.currentTarget.style.color = "#2563eb";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "none";
+                        e.currentTarget.style.color = "#64748b";
+                      }}
+                      onClick={() => {
+                        setShowProfileMenu(false);
+                        logout();
                       }}
                     >
                       <svg
@@ -1007,23 +953,93 @@ function App() {
                         xmlns="http://www.w3.org/2000/svg"
                       >
                         <path
-                          d="M6 18L18 6M6 6L18 18"
+                          d="M9 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H9"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M16 17L21 12L16 7"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M21 12H9"
                           stroke="currentColor"
                           strokeWidth="2"
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         />
                       </svg>
-                      Clear filters
+                      Sign out
                     </button>
-                  )}
-                </div>
-              )}
-            </div>
+
+                    <div
+                      style={{
+                        height: "1px",
+                        background: "#f1f5f9",
+                        margin: "0.5rem 0",
+                      }}
+                    ></div>
+
+                    <button
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem",
+                        width: "100%",
+                        background: "none",
+                        border: "none",
+                        color: "#ef4444",
+                        fontWeight: 500,
+                        cursor: "pointer",
+                        fontSize: "0.95rem",
+                        padding: "0.6rem 0.5rem",
+                        borderRadius: "6px",
+                        transition: "all 0.2s",
+                        textAlign: "left",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "#fef2f2";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "none";
+                      }}
+                      onClick={() => {
+                        setShowProfileMenu(false);
+                        setShowDeleteAccountModal(true);
+                      }}
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M19 7L18.1327 19.1425C18.0579 20.1891 17.187 21 16.1378 21H7.86224C6.81296 21 5.94208 20.1891 5.86732 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      Delete account
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Tasks Section */}
-          {filteredTasks.length === 0 ? (
+          {tasksLoading ? (
+            <div style={{ textAlign: "center", padding: "4rem" }}>Loading...</div>
+          ) : filteredTasks.length === 0 ? (
             <div
               style={{
                 textAlign: "center",
