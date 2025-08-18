@@ -57,7 +57,15 @@ function App() {
     addTask: addTaskStore,
     updateTask: updateTaskStore,
     deleteTask: deleteTaskStore,
-    loading: tasksLoading
+    loading: tasksLoading,
+    tags,
+    addTag: addTagToStore,
+  } = useTaskStore();
+  const {
+    taskStatus,
+    taskPriorities,
+    updateTaskStatus: updateTaskStatusStore,
+    updateTaskPriority: updateTaskPriorityStore,
   } = useTaskStore();
   const { setError: setUIError } = useUIStore();
 
@@ -118,7 +126,6 @@ function App() {
   const [newTag, setNewTag] = useState("");
   const [newDeadline, setNewDeadline] = useState("");
   const [newPriority, setNewPriority] = useState("normal");
-  const [tags, setTags] = useState(["Personal", "Work", "Urgent"]);
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editingText, setEditingText] = useState("");
@@ -128,13 +135,12 @@ function App() {
   const [editingPriority, setEditingPriority] = useState("normal");
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState([]);
-  const [taskStatus, setTaskStatus] = useState({}); // { taskId: status }
-  const [taskPriorities, setTaskPriorities] = useState({}); // { taskId: priority }
   const [showTagDropdown, setShowTagDropdown] = useState(null); // taskId or null
   const leaveTimeout = useRef(null);
   const [showTagSelector, setShowTagSelector] = useState(false);
   const [modalClosing, setModalClosing] = useState(false);
   const [showTaskMenu, setShowTaskMenu] = useState(null); // taskId or null
+  const [newTagFromDropdown, setNewTagFromDropdown] = useState("");
   const [taskOrder, setTaskOrder] = useState([]);
   const [draggedTask, setDraggedTask] = useState(null);
   const [dragOverTask, setDragOverTask] = useState(null);
@@ -182,27 +188,6 @@ function App() {
   }, [token, loadTasks]);
 
   // Initialize task statuses when tasks are loaded
-  useEffect(() => {
-    const statuses = {};
-    tasks.forEach((task) => {
-      if (!taskStatus[task._id]) {
-        statuses[task._id] = task.status || TASK_STATUS.PENDING;
-      }
-    });
-    setTaskStatus((prev) => ({ ...prev, ...statuses }));
-  }, [tasks, taskStatus]);
-
-  // Initialize task priorities when tasks are loaded
-  useEffect(() => {
-    const priorities = {};
-    tasks.forEach((task) => {
-      if (!taskPriorities[task._id]) {
-        priorities[task._id] = task.priority || "normal";
-      }
-    });
-    setTaskPriorities((prev) => ({ ...prev, ...priorities }));
-  }, [tasks, taskPriorities]);
-
   // Initialize task order
   useEffect(() => {
     if (tasks.length > 0 && taskOrder.length === 0) {
@@ -214,10 +199,7 @@ function App() {
   const updateTaskStatus = async (taskId, status) => {
     try {
       await updateTaskStore(taskId, { status });
-      setTaskStatus((prev) => ({
-        ...prev,
-        [taskId]: status,
-      }));
+      updateTaskStatusStore(taskId, status);
     } catch (error) {
       console.error("Error updating task status:", error);
       setUIError("Failed to update task status");
@@ -250,10 +232,7 @@ function App() {
   const updateTaskPriority = async (taskId, priority) => {
     try {
       await updateTaskStore(taskId, { priority });
-      setTaskPriorities((prev) => ({
-        ...prev,
-        [taskId]: priority,
-      }));
+      updateTaskPriorityStore(taskId, priority);
     } catch (error) {
       console.error("Error updating task priority:", error);
       setUIError("Failed to update task priority");
@@ -309,15 +288,6 @@ function App() {
     updateTaskStore(taskId, { tags: newTags });
   };
 
-  // Always sync tag list with all unique tags from tasks
-  useEffect(() => {
-    const allTags = Array.from(
-      new Set(tasks.flatMap((t) => (Array.isArray(t.tags) ? t.tags : []))),
-    );
-    const defaultTags = ["Personal", "Work", "Urgent"];
-    const merged = Array.from(new Set([...defaultTags, ...allTags]));
-    setTags(merged);
-  }, [tasks]);
 
   // Toggle completion in backend
 
@@ -405,10 +375,32 @@ function App() {
 
   const handleAddTag = (e) => {
     e.preventDefault();
-    if (newTag.trim() && !tags.includes(newTag.trim())) {
-      setTags([...tags, newTag.trim()]);
+    if (newTag.trim()) {
+      addTagToStore(newTag.trim());
       setNewTag("");
     }
+  };
+
+  const handleAddNewTagInDropdown = (e) => {
+    e.preventDefault();
+    const trimmedTag = newTagFromDropdown.trim();
+    if (!trimmedTag) return;
+
+    // Add to master tag list
+    addTagToStore(trimmedTag);
+
+    // Add to the current task
+    const taskId = showTagDropdown;
+    if (taskId) {
+      const task = tasks.find((t) => t._id === taskId);
+      // Ensure task.tags is an array before checking .includes()
+      const currentTaskTags = Array.isArray(task?.tags) ? task.tags : [];
+      if (task && !currentTaskTags.includes(trimmedTag)) {
+        toggleTaskTag(taskId, trimmedTag);
+      }
+    }
+
+    setNewTagFromDropdown("");
   };
 
   const handleRemoveTag = (index) => {
@@ -1427,14 +1419,13 @@ function App() {
                                   style={{
                                     background: "transparent",
                                     border: "1px dashed #cbd5e1",
-                                    borderRadius: "0.5rem",
-                                    padding: "0.25rem 0.75rem",
+                                    borderRadius: "9999px",
+                                    padding: "0.4rem",
                                     color: "#64748b",
-                                    fontSize: "0.85rem",
                                     cursor: "pointer",
                                     display: "flex",
                                     alignItems: "center",
-                                    gap: "0.5rem",
+                                    justifyContent: "center",
                                     transition: "all 0.2s",
                                   }}
                                   onMouseEnter={(e) => {
@@ -1446,8 +1437,7 @@ function App() {
                                     e.currentTarget.style.borderColor = "#cbd5e1";
                                   }}
                                 >
-                                  <Plus size={14} />
-                                  Add Tag
+                                  <Plus size={16} />
                                 </button>
                               </div>
                             </div>
@@ -1982,24 +1972,68 @@ function App() {
                         marginTop: "1rem",
                         paddingTop: "0.75rem",
                         borderTop: "1px solid #f3f4f6",
-                        textAlign: "center",
                       }}
                     >
-                      <button
-                        onClick={() => setShowTagDropdown(null)}
+                      <div
                         style={{
-                          background: blueGradient,
-                          color: "#fff",
-                          border: "none",
-                          borderRadius: "0.5rem",
-                          padding: "0.5rem 1.5rem",
-                          fontSize: "0.9rem",
-                          fontWeight: 600,
-                          cursor: "pointer",
+                          display: "flex",
+                          gap: "0.5rem",
+                          marginBottom: "1rem",
                         }}
                       >
-                        Done
-                      </button>
+                        <input
+                          type="text"
+                          value={newTagFromDropdown}
+                          onChange={(e) => setNewTagFromDropdown(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleAddNewTagInDropdown(e);
+                            }
+                          }}
+                          placeholder="Create new tag"
+                          style={{
+                            flex: 1,
+                            padding: "0.5rem 0.75rem",
+                            borderRadius: "0.5rem",
+                            border: `1px solid #2563eb`,
+                            fontSize: "0.9rem",
+                          }}
+                        />
+                        <button
+                          onClick={handleAddNewTagInDropdown}
+                          style={{
+                            background: blueGradient,
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "0.5rem",
+                            padding: "0.5rem 1rem",
+                            fontSize: "0.9rem",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          Add
+                        </button>
+                      </div>
+                      <div style={{ textAlign: "center" }}>
+                        <button
+                          onClick={() => setShowTagDropdown(null)}
+                          style={{
+                            background: blueGradient,
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "0.5rem",
+                            padding: "0.5rem 1.5rem",
+                            fontSize: "0.9rem",
+                            fontWeight: 600,
+                            cursor: "pointer",
+                          }}
+                        >
+                          Done
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2120,14 +2154,13 @@ function App() {
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: "0.5rem",
+                      justifyContent: "center",
                       background: "transparent",
                       border: `2px solid ${blue}`,
-                      borderRadius: "0.75rem",
-                      padding: "0.5rem 1rem",
+                      borderRadius: "9999px",
+                      width: "36px",
+                      height: "36px",
                       color: blue,
-                      fontSize: "0.9rem",
-                      fontWeight: 600,
                       cursor: "pointer",
                       transition: "all 0.2s ease",
                     }}
@@ -2140,8 +2173,7 @@ function App() {
                       e.currentTarget.style.color = blue;
                     }}
                   >
-                    <Plus size={16} />
-                    Add Tags
+                    <Plus size={20} />
                   </button>
                 </div>
 
