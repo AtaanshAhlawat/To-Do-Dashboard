@@ -1283,8 +1283,11 @@ function App() {
                         >
                           <div
                             onClick={(e) => {
+                              e.preventDefault();
                               e.stopPropagation();
+                              e.nativeEvent.stopImmediatePropagation();
                               toggleTaskPriority(task._id);
+                              return false;
                             }}
                             style={{
                               display: "inline-flex",
