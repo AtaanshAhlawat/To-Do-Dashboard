@@ -129,6 +129,7 @@ function App() {
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState([]);
   const [taskStatus, setTaskStatus] = useState({}); // { taskId: status }
+  const [taskPriorities, setTaskPriorities] = useState({}); // { taskId: priority }
   const [showTagDropdown, setShowTagDropdown] = useState(null); // taskId or null
   const leaveTimeout = useRef(null);
   const [showTagSelector, setShowTagSelector] = useState(false);
@@ -191,6 +192,17 @@ function App() {
     setTaskStatus((prev) => ({ ...prev, ...statuses }));
   }, [tasks, taskStatus]);
 
+  // Initialize task priorities when tasks are loaded
+  useEffect(() => {
+    const priorities = {};
+    tasks.forEach((task) => {
+      if (!taskPriorities[task._id]) {
+        priorities[task._id] = task.priority || "normal";
+      }
+    });
+    setTaskPriorities((prev) => ({ ...prev, ...priorities }));
+  }, [tasks, taskPriorities]);
+
   // Initialize task order
   useEffect(() => {
     if (tasks.length > 0 && taskOrder.length === 0) {
@@ -234,12 +246,23 @@ function App() {
     updateTaskStatus(taskId, newStatus);
   };
 
+  // Update task priority in the backend
+  const updateTaskPriority = async (taskId, priority) => {
+    try {
+      await updateTaskStore(taskId, { priority });
+      setTaskPriorities((prev) => ({
+        ...prev,
+        [taskId]: priority,
+      }));
+    } catch (error) {
+      console.error("Error updating task priority:", error);
+      setUIError("Failed to update task priority");
+    }
+  };
+
   // Toggle task priority
   const toggleTaskPriority = (taskId) => {
-    const task = tasks.find((t) => t._id === taskId);
-    if (!task) return;
-
-    const currentPriority = task.priority || "normal";
+    const currentPriority = taskPriorities[taskId] || "normal";
     let newPriority;
 
     switch (currentPriority) {
@@ -256,7 +279,7 @@ function App() {
         newPriority = "normal";
     }
 
-    updateTaskStore(taskId, { priority: newPriority });
+    updateTaskPriority(taskId, newPriority);
   };
 
   // Format date to 'Tue Aug 12 6:24 PM' format
@@ -1128,7 +1151,8 @@ function App() {
                   {filteredTasks.map((task) => {
                     const status = taskStatus[task._id] || TASK_STATUS.PENDING;
                     const statusColor = STATUS_COLORS[status] || "#64748b";
-                    const priority = task.priority || "normal";
+                    const priority =
+                      taskPriorities[task._id] || task.priority || "normal";
                     const priorityColors = {
                       high: {
                         bg: "#fef3c7",
