@@ -104,8 +104,6 @@ function App() {
     }
   };
 
-  // User menu toggle
-
   // Close profile menu when clicking outside
   useEffect(() => {
     if (!showProfileMenu) return;
@@ -187,7 +185,6 @@ function App() {
     if (token) loadTasks();
   }, [token, loadTasks]);
 
-  // Initialize task statuses when tasks are loaded
   // Initialize task order
   useEffect(() => {
     if (tasks.length > 0 && taskOrder.length === 0) {
@@ -288,9 +285,6 @@ function App() {
     updateTaskStore(taskId, { tags: newTags });
   };
 
-
-  // Toggle completion in backend
-
   // Delete from backend
   const handleDeleteTask = async (id) => {
     await deleteTaskStore(id);
@@ -372,7 +366,6 @@ function App() {
     }
   };
 
-
   const handleAddTag = (e) => {
     e.preventDefault();
     if (newTag.trim()) {
@@ -435,7 +428,6 @@ function App() {
       }
     }, 200);
   };
-
 
   // Drag and drop handlers
   const handleDragStart = (e, taskId) => {
@@ -544,7 +536,6 @@ function App() {
 
   return (
     <>
-
       <div
         style={{
           minHeight: "100vh",
@@ -655,7 +646,7 @@ function App() {
                       boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
                       padding: "0.75rem",
                       minWidth: "200px",
-                      zIndex: 1001, // Higher z-index
+                      zIndex: 1001,
                       border: "1px solid #f1f5f9",
                       maxHeight: "300px",
                       overflowY: "auto",
@@ -854,7 +845,7 @@ function App() {
                       borderRadius: 12,
                       padding: "1rem",
                       minWidth: 200,
-                      zIndex: 1001, // Higher z-index
+                      zIndex: 1001,
                       border: "1px solid #f1f5f9",
                     }}
                   >
@@ -1049,7 +1040,7 @@ function App() {
                 style={{
                   width: "100%",
                   borderCollapse: "collapse",
-                  minWidth: "800px",
+                  minWidth: "900px", // Increased from 800px
                 }}
               >
                 <thead>
@@ -1093,7 +1084,7 @@ function App() {
                         fontSize: "0.9rem",
                         textTransform: "uppercase",
                         letterSpacing: "0.05em",
-                        minWidth: "200px",
+                        minWidth: "280px", // Increased from 200px
                       }}
                     >
                       Tags
@@ -1251,13 +1242,7 @@ function App() {
                           }}
                         >
                           <div
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              e.nativeEvent.stopImmediatePropagation();
-                              toggleTaskPriority(task._id);
-                              return false;
-                            }}
+                            onClick={() => toggleTaskPriority(task._id)}
                             style={{
                               display: "inline-flex",
                               alignItems: "center",
@@ -1306,22 +1291,24 @@ function App() {
                           <div
                             style={{
                               display: "flex",
-                              alignItems: "center",
+                              alignItems: "flex-start", // Changed from center to flex-start
                               gap: "0.5rem",
                               flexWrap: "wrap",
                               minHeight: "40px",
+                              maxHeight: "120px", // Add max height to prevent excessive growth
+                              overflowY: "auto", // Add scroll if needed
                             }}
                           >
                             <div
                               style={{
                                 display: "flex",
                                 flexWrap: "wrap",
-                                gap: "0.5rem",
+                                gap: "0.4rem", // Slightly reduced gap
+                                flex: 1,
                               }}
                             >
-                              {Array.isArray(task.tags) &&
-                                task.tags.length > 0 &&
-                                task.tags.slice(0, 3).map((tag) => (
+                              {Array.isArray(task.tags) && task.tags.length > 0 ? (
+                                task.tags.map((tag) => ( // Removed .slice(0, 3) to show all tags
                                   <div
                                     key={tag}
                                     style={{
@@ -1333,46 +1320,35 @@ function App() {
                                       style={{
                                         background: "#e0f2fe",
                                         color: blue,
-                                        padding: "0.3rem 0.8rem",
+                                        padding: "0.25rem 0.6rem", // Slightly reduced padding
                                         borderRadius: "9999px",
-                                        fontSize: "0.8rem",
+                                        fontSize: "0.75rem", // Slightly smaller font
                                         fontWeight: 500,
                                         display: "inline-flex",
                                         alignItems: "center",
                                         gap: "0.25rem",
                                         transition: "all 0.2s",
                                         border: "1px solid transparent",
+                                        whiteSpace: "nowrap", // Prevent tag text wrapping
                                       }}
                                       title={tag}
                                       onMouseEnter={(e) => {
-                                        e.currentTarget.style.background =
-                                          "#bae6fd";
-                                        e.currentTarget.style.borderColor =
-                                          "#7dd3fc";
-                                        e.currentTarget.style.transform =
-                                          "translateY(-1px)";
+                                        e.currentTarget.style.background = "#bae6fd";
+                                        e.currentTarget.style.borderColor = "#7dd3fc";
+                                        e.currentTarget.style.transform = "translateY(-1px)";
                                       }}
                                       onMouseLeave={(e) => {
-                                        e.currentTarget.style.background =
-                                          "#e0f2fe";
-                                        e.currentTarget.style.borderColor =
-                                          "transparent";
-                                        e.currentTarget.style.transform =
-                                          "translateY(0)";
+                                        e.currentTarget.style.background = "#e0f2fe";
+                                        e.currentTarget.style.borderColor = "transparent";
+                                        e.currentTarget.style.transform = "translateY(0)";
                                       }}
                                     >
-                                      {tag.length > 12
-                                        ? `${tag.substring(0, 10)}...`
-                                        : tag}
+                                      {tag.length > 10 ? `${tag.substring(0, 8)}...` : tag} {/* Shortened truncation */}
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          const updatedTags = task.tags.filter(
-                                            (t) => t !== tag,
-                                          );
-                                          updateTaskStore(task._id, {
-                                            tags: updatedTags,
-                                          });
+                                          const updatedTags = task.tags.filter((t) => t !== tag);
+                                          updateTaskStore(task._id, { tags: updatedTags });
                                         }}
                                         style={{
                                           background: "transparent",
@@ -1386,27 +1362,28 @@ function App() {
                                           padding: "0.1rem",
                                           borderRadius: "50%",
                                           transition: "all 0.2s",
+                                          width: "14px", // Fixed width
+                                          height: "14px", // Fixed height
                                         }}
                                         onMouseEnter={(e) => {
-                                          e.currentTarget.style.background =
-                                            "rgba(0, 0, 0, 0.1)";
+                                          e.currentTarget.style.background = "rgba(0, 0, 0, 0.1)";
                                           e.currentTarget.style.opacity = "1";
-                                          e.currentTarget.style.transform =
-                                            "scale(1.1)";
+                                          e.currentTarget.style.transform = "scale(1.1)";
                                         }}
                                         onMouseLeave={(e) => {
-                                          e.currentTarget.style.background =
-                                            "transparent";
+                                          e.currentTarget.style.background = "transparent";
                                           e.currentTarget.style.opacity = "0.7";
-                                          e.currentTarget.style.transform =
-                                            "scale(1)";
+                                          e.currentTarget.style.transform = "scale(1)";
                                         }}
                                       >
                                         ×
                                       </button>
                                     </span>
                                   </div>
-                                ))}
+                                ))
+                              ) : null}
+                              
+                              {/* Add Tag Button */}
                               <div style={{ position: "relative" }}>
                                 <button
                                   data-tag-button
@@ -1420,13 +1397,15 @@ function App() {
                                     background: "transparent",
                                     border: "1px dashed #cbd5e1",
                                     borderRadius: "9999px",
-                                    padding: "0.4rem",
+                                    padding: "0.35rem", // Adjusted to match smaller tags
                                     color: "#64748b",
                                     cursor: "pointer",
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
                                     transition: "all 0.2s",
+                                    width: "28px", // Fixed width
+                                    height: "28px", // Fixed height
                                   }}
                                   onMouseEnter={(e) => {
                                     e.currentTarget.style.background = "#f8fafc";
@@ -1436,8 +1415,9 @@ function App() {
                                     e.currentTarget.style.background = "transparent";
                                     e.currentTarget.style.borderColor = "#cbd5e1";
                                   }}
+                                  title="Add tag to this task"
                                 >
-                                  <Plus size={16} />
+                                  <Plus size={14} />
                                 </button>
                               </div>
                             </div>
@@ -2215,8 +2195,7 @@ function App() {
                             style={{
                               background: "rgba(255, 255, 255, 0.2)",
                               border: "none",
-                              borderRadius: "50%",
-                              width: "20px",
+                              borderRadius: "50%",width: "20px",
                               height: "20px",
                               color: "#fff",
                               cursor: "pointer",
