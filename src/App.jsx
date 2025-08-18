@@ -44,7 +44,9 @@ function App() {
         localStorage.clear();
         window.location.reload();
       }
-    } catch {}
+    } catch (e) {
+      console.error("Failed to parse persisted tasks", e);
+    }
   }, []);
 
   // Zustand stores
@@ -55,15 +57,9 @@ function App() {
     addTask: addTaskStore,
     updateTask: updateTaskStore,
     deleteTask: deleteTaskStore,
-    loading: tasksLoading,
-    error: tasksError,
-    clear: clearTasks,
+    loading: tasksLoading
   } = useTaskStore();
-  const {
-    loading: uiLoading,
-    error: uiError,
-    setError: setUIError,
-  } = useUIStore();
+  const { setError: setUIError } = useUIStore();
 
   // Local UI state
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -71,7 +67,6 @@ function App() {
   const profileMenuRef = useRef(null);
   const tagFilterRef = useRef(null);
   const [tagFilter, setTagFilter] = useState([]); // Multi-tag filter
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
 
@@ -102,9 +97,6 @@ function App() {
   };
 
   // User menu toggle
-  const toggleUserMenu = () => {
-    setShowProfileMenu(!showProfileMenu);
-  };
 
   // Close profile menu when clicking outside
   useEffect(() => {
@@ -139,7 +131,6 @@ function App() {
   const [taskStatus, setTaskStatus] = useState({}); // { taskId: status }
   const [showTagDropdown, setShowTagDropdown] = useState(null); // taskId or null
   const leaveTimeout = useRef(null);
-  const [selectedFilterTags, setSelectedFilterTags] = useState([]);
   const [showTagSelector, setShowTagSelector] = useState(false);
   const [modalClosing, setModalClosing] = useState(false);
   const [showTaskMenu, setShowTaskMenu] = useState(null); // taskId or null
@@ -306,11 +297,6 @@ function App() {
   }, [tasks]);
 
   // Toggle completion in backend
-  const toggleTask = async (id) => {
-    const task = tasks.find((t) => t._id === id);
-    if (!task) return;
-    await updateTaskStore(id, { completed: !task.completed });
-  };
 
   // Delete from backend
   const handleDeleteTask = async (id) => {
@@ -393,14 +379,6 @@ function App() {
     }
   };
 
-  const cancelEdit = () => {
-    setEditingId(null);
-    setEditingText("");
-    setEditingDescription("");
-    setEditingTags([]);
-    setEditingDeadline("");
-    setEditingPriority("normal");
-  };
 
   const handleAddTag = (e) => {
     e.preventDefault();
@@ -443,30 +421,6 @@ function App() {
     }, 200);
   };
 
-  const saveEdit = async (taskId) => {
-    if (!editingText.trim()) return;
-
-    const taskData = {
-      text: editingText.trim(),
-      description: editingDescription.trim(),
-      tags: editingTags,
-      deadline: editingDeadline,
-      priority: editingPriority,
-    };
-
-    try {
-      await updateTaskStore(taskId, taskData);
-      setEditingId(null);
-      setEditingText("");
-      setEditingDescription("");
-      setEditingTags([]);
-      setEditingDeadline("");
-      setEditingPriority("normal");
-    } catch (error) {
-      console.error("Error updating task:", error);
-      setUIError("Failed to update task. Please try again.");
-    }
-  };
 
   // Drag and drop handlers
   const handleDragStart = (e, taskId) => {
@@ -866,7 +820,6 @@ function App() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    border: "2px solid #e2e8f0",
                   }}
                   onClick={() => setShowProfileMenu((v) => !v)}
                   aria-label="Profile menu"
@@ -1172,7 +1125,7 @@ function App() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTasks.map((task, index) => {
+                  {filteredTasks.map((task) => {
                     const status = taskStatus[task._id] || TASK_STATUS.PENDING;
                     const statusColor = STATUS_COLORS[status] || "#64748b";
                     const priority = task.priority || "normal";
