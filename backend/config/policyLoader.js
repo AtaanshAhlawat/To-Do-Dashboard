@@ -51,7 +51,7 @@ class PolicyLoader {
   /**
    * Get policy middlewares for a given route
    */
-  getPolicyMiddlewares(path, httpMethod) {
+  getPolicyMiddlewares(path, _httpMethod) {
     const middlewares = [];
     
     // Clean path for matching
@@ -108,7 +108,7 @@ class PolicyLoader {
       
       if (policyName === false) {
         // false means deny all
-        middlewares.push((req, res, next) => {
+        middlewares.push((req, res, _next) => {
           res.status(403).json({ 
             error: 'Access denied by policy.',
             code: 'POLICY_DENIED'

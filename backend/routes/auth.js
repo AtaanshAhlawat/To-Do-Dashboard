@@ -5,6 +5,7 @@ const crypto = require("crypto");
 const User = require("../models/User");
 const Task = require("../models/Task");
 const { blacklistToken } = require("../config/policies");
+const authMiddleware = require("../middleware/authMiddleware");
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET;

@@ -17,7 +17,7 @@ const encryptToken = (token) => {
 const decryptToken = (encryptedToken) => {
   try {
     const textParts = encryptedToken.split(':');
-    const iv = Buffer.from(textParts.shift(), 'hex');
+    const _iv = Buffer.from(textParts.shift(), 'hex');
     const encryptedText = textParts.join(':');
     const decipher = crypto.createDecipher('aes-256-cbc', ENCRYPTION_KEY);
     let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
