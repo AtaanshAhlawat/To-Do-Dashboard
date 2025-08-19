@@ -137,7 +137,6 @@ function App() {
   const leaveTimeout = useRef(null);
   const [showTagSelector, setShowTagSelector] = useState(false);
   const [modalClosing, setModalClosing] = useState(false);
-  const [showTaskMenu, setShowTaskMenu] = useState(null); // taskId or null
   const [newTagFromDropdown, setNewTagFromDropdown] = useState("");
   const [taskOrder, setTaskOrder] = useState([]);
   const [draggedTask, setDraggedTask] = useState(null);
@@ -154,19 +153,11 @@ function App() {
       ) {
         setShowTagDropdown(null);
       }
-      // Check if clicking outside task menu
-      if (
-        showTaskMenu &&
-        !e.target.closest("[data-task-menu]") &&
-        !e.target.closest("[data-menu-button]")
-      ) {
-        setShowTaskMenu(null);
-      }
     }
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showTagDropdown, showTaskMenu]);
+  }, [showTagDropdown]);
 
   // Close tag filter dropdown when clicking outside
   useEffect(() => {
@@ -1040,7 +1031,7 @@ function App() {
                 style={{
                   width: "100%",
                   borderCollapse: "collapse",
-                  minWidth: "900px", // Increased from 800px
+                  minWidth: "900px",
                 }}
               >
                 <thead>
@@ -1084,7 +1075,7 @@ function App() {
                         fontSize: "0.9rem",
                         textTransform: "uppercase",
                         letterSpacing: "0.05em",
-                        minWidth: "280px", // Increased from 200px
+                        minWidth: "280px",
                       }}
                     >
                       Tags
@@ -1123,7 +1114,7 @@ function App() {
                         fontSize: "0.9rem",
                         textTransform: "uppercase",
                         letterSpacing: "0.05em",
-                        width: "120px",
+                        width: "140px",
                       }}
                     >
                       Actions
@@ -1180,7 +1171,6 @@ function App() {
                           clearTimeout(leaveTimeout.current);
                           if (
                             draggedTask !== task._id &&
-                            !showTaskMenu &&
                             !showTagDropdown
                           ) {
                             e.currentTarget.style.background =
@@ -1192,7 +1182,6 @@ function App() {
                             if (
                               draggedTask !== task._id &&
                               dragOverTask !== task._id &&
-                              !showTaskMenu &&
                               !showTagDropdown
                             ) {
                               e.currentTarget.style.background = "transparent";
@@ -1291,24 +1280,24 @@ function App() {
                           <div
                             style={{
                               display: "flex",
-                              alignItems: "flex-start", // Changed from center to flex-start
+                              alignItems: "flex-start",
                               gap: "0.5rem",
                               flexWrap: "wrap",
                               minHeight: "40px",
-                              maxHeight: "120px", // Add max height to prevent excessive growth
-                              overflowY: "auto", // Add scroll if needed
+                              maxHeight: "120px",
+                              overflowY: "auto",
                             }}
                           >
                             <div
                               style={{
                                 display: "flex",
                                 flexWrap: "wrap",
-                                gap: "0.4rem", // Slightly reduced gap
+                                gap: "0.4rem",
                                 flex: 1,
                               }}
                             >
                               {Array.isArray(task.tags) && task.tags.length > 0 ? (
-                                task.tags.map((tag) => ( // Removed .slice(0, 3) to show all tags
+                                task.tags.map((tag) => (
                                   <div
                                     key={tag}
                                     style={{
@@ -1320,16 +1309,16 @@ function App() {
                                       style={{
                                         background: "#e0f2fe",
                                         color: blue,
-                                        padding: "0.25rem 0.6rem", // Slightly reduced padding
+                                        padding: "0.25rem 0.6rem",
                                         borderRadius: "9999px",
-                                        fontSize: "0.75rem", // Slightly smaller font
+                                        fontSize: "0.75rem",
                                         fontWeight: 500,
                                         display: "inline-flex",
                                         alignItems: "center",
                                         gap: "0.25rem",
                                         transition: "all 0.2s",
                                         border: "1px solid transparent",
-                                        whiteSpace: "nowrap", // Prevent tag text wrapping
+                                        whiteSpace: "nowrap",
                                       }}
                                       title={tag}
                                       onMouseEnter={(e) => {
@@ -1343,7 +1332,7 @@ function App() {
                                         e.currentTarget.style.transform = "translateY(0)";
                                       }}
                                     >
-                                      {tag.length > 10 ? `${tag.substring(0, 8)}...` : tag} {/* Shortened truncation */}
+                                      {tag.length > 10 ? `${tag.substring(0, 8)}...` : tag}
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
@@ -1362,8 +1351,8 @@ function App() {
                                           padding: "0.1rem",
                                           borderRadius: "50%",
                                           transition: "all 0.2s",
-                                          width: "14px", // Fixed width
-                                          height: "14px", // Fixed height
+                                          width: "14px",
+                                          height: "14px",
                                         }}
                                         onMouseEnter={(e) => {
                                           e.currentTarget.style.background = "rgba(0, 0, 0, 0.1)";
@@ -1397,15 +1386,15 @@ function App() {
                                     background: "transparent",
                                     border: "1px dashed #cbd5e1",
                                     borderRadius: "9999px",
-                                    padding: "0.35rem", // Adjusted to match smaller tags
+                                    padding: "0.35rem",
                                     color: "#64748b",
                                     cursor: "pointer",
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
                                     transition: "all 0.2s",
-                                    width: "28px", // Fixed width
-                                    height: "28px", // Fixed height
+                                    width: "28px",
+                                    height: "28px",
                                   }}
                                   onMouseEnter={(e) => {
                                     e.currentTarget.style.background = "#f8fafc";
@@ -1517,8 +1506,7 @@ function App() {
                                 e.currentTarget.style.color = blue;
                               }}
                               onMouseLeave={(e) => {
-                                e.currentTarget.style.background =
-                                  "transparent";
+                                e.currentTarget.style.background = "transparent";
                                 e.currentTarget.style.color = "#64748b";
                                 e.currentTarget.style.cursor = "grab";
                               }}
@@ -1530,247 +1518,76 @@ function App() {
                                 fill="none"
                                 xmlns="http://www.w3.org/2000/svg"
                               >
-                                <circle
-                                  cx="9"
-                                  cy="5"
-                                  r="1"
-                                  fill="currentColor"
-                                />
-                                <circle
-                                  cx="15"
-                                  cy="5"
-                                  r="1"
-                                  fill="currentColor"
-                                />
-                                <circle
-                                  cx="9"
-                                  cy="12"
-                                  r="1"
-                                  fill="currentColor"
-                                />
-                                <circle
-                                  cx="15"
-                                  cy="12"
-                                  r="1"
-                                  fill="currentColor"
-                                />
-                                <circle
-                                  cx="9"
-                                  cy="19"
-                                  r="1"
-                                  fill="currentColor"
-                                />
-                                <circle
-                                  cx="15"
-                                  cy="19"
-                                  r="1"
-                                  fill="currentColor"
-                                />
+                                <circle cx="9" cy="5" r="1" fill="currentColor" />
+                                <circle cx="15" cy="5" r="1" fill="currentColor" />
+                                <circle cx="9" cy="12" r="1" fill="currentColor" />
+                                <circle cx="15" cy="12" r="1" fill="currentColor" />
+                                <circle cx="9" cy="19" r="1" fill="currentColor" />
+                                <circle cx="15" cy="19" r="1" fill="currentColor" />
                               </svg>
                             </div>
 
-                            {/* Menu button */}
-                            <div
-                              style={{ position: "relative", zIndex: 999999 }}
+                            {/* Edit button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditClick(task);
+                              }}
+                              style={{
+                                background: "transparent",
+                                border: "none",
+                                color: "#64748b",
+                                cursor: "pointer",
+                                padding: "0.4rem",
+                                borderRadius: "0.5rem",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                transition: "all 0.2s",
+                              }}
+                              title="Edit task"
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = "#f1f5f9";
+                                e.currentTarget.style.color = blue;
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = "transparent";
+                                e.currentTarget.style.color = "#64748b";
+                              }}
                             >
-                              <button
-                                data-menu-button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setShowTaskMenu(
-                                    showTaskMenu === task._id ? null : task._id,
-                                  );
-                                }}
-                                style={{
-                                  background: "transparent",
-                                  border: "none",
-                                  color: "#64748b",
-                                  cursor: "pointer",
-                                  padding: "0.4rem",
-                                  borderRadius: "0.5rem",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  transition: "all 0.2s",
-                                }}
-                                title="More options"
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.background = "#f1f5f9";
-                                  e.currentTarget.style.color = blue;
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.background =
-                                    "transparent";
-                                  e.currentTarget.style.color = "#64748b";
-                                }}
-                              >
-                                <svg
-                                  width="18"
-                                  height="18"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <circle
-                                    cx="12"
-                                    cy="12"
-                                    r="1"
-                                    fill="currentColor"
-                                  />
-                                  <circle
-                                    cx="12"
-                                    cy="5"
-                                    r="1"
-                                    fill="currentColor"
-                                  />
-                                  <circle
-                                    cx="12"
-                                    cy="19"
-                                    r="1"
-                                    fill="currentColor"
-                                  />
-                                </svg>
-                              </button>
+                              <Edit2 size={16} />
+                            </button>
 
-                              {/* Dropdown menu */}
-                              {showTaskMenu === task._id && (
-                                <div
-                                  style={{
-                                    position: "fixed",
-                                    top: 0,
-                                    left: 0,
-                                    right: 0,
-                                    bottom: 0,
-                                    zIndex: 999999,
-                                  }}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowTaskMenu(null);
-                                  }}
-                                >
-                                  <div
-                                    style={{
-                                      position: "fixed",
-                                      top: 0,
-                                      left: 0,
-                                      right: 0,
-                                      bottom: 0,
-                                      background: "rgba(0, 0, 0, 0.3)",
-                                      zIndex: -1,
-                                    }}
-                                  />
-                                  <div
-                                    style={{
-                                      position: "absolute",
-                                      top: "50%",
-                                      left: "50%",
-                                      transform: "translate(-50%, -50%)",
-                                      zIndex: 1000000,
-                                    }}
-                                  >
-                                    <div
-                                      data-task-menu
-                                      style={{
-                                        background: "#fff",
-                                        borderRadius: "0.75rem",
-                                        boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-                                        padding: "0.75rem",
-                                        minWidth: "180px",
-                                        border: "1px solid #e5e7eb",
-                                      }}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                      }}
-                                    >
-                                      <div
-                                        style={{
-                                          fontWeight: 600,
-                                          fontSize: "0.9rem",
-                                          color: "#374151",
-                                          marginBottom: "0.75rem",
-                                          textAlign: "center",
-                                        }}
-                                      >
-                                        Task Options
-                                      </div>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setShowTaskMenu(null);
-                                          handleEditClick(task);
-                                        }}
-                                        style={{
-                                          width: "100%",
-                                          display: "flex",
-                                          alignItems: "center",
-                                          gap: "0.5rem",
-                                          padding: "0.5rem 0.75rem",
-                                          background: "transparent",
-                                          border: "none",
-                                          borderRadius: "0.5rem",
-                                          color: "#374151",
-                                          cursor: "pointer",
-                                          fontSize: "0.9rem",
-                                          transition: "all 0.2s",
-                                          textAlign: "left",
-                                        }}
-                                        onMouseEnter={(e) => {
-                                          e.currentTarget.style.background =
-                                            "#f8fafc";
-                                          e.currentTarget.style.color = blue;
-                                        }}
-                                        onMouseLeave={(e) => {
-                                          e.currentTarget.style.background =
-                                            "transparent";
-                                          e.currentTarget.style.color =
-                                            "#374151";
-                                        }}
-                                      >
-                                        <Edit2 size={16} />
-                                        Edit Task
-                                      </button>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setShowTaskMenu(null);
-                                          handleDeleteTask(task._id);
-                                        }}
-                                        style={{
-                                          width: "100%",
-                                          display: "flex",
-                                          alignItems: "center",
-                                          gap: "0.5rem",
-                                          padding: "0.5rem 0.75rem",
-                                          background: "transparent",
-                                          border: "none",
-                                          borderRadius: "0.5rem",
-                                          color: "#374151",
-                                          cursor: "pointer",
-                                          fontSize: "0.9rem",
-                                          transition: "all 0.2s",
-                                          textAlign: "left",
-                                        }}
-                                        onMouseEnter={(e) => {
-                                          e.currentTarget.style.background =
-                                            "#fef2f2";
-                                          e.currentTarget.style.color =
-                                            "#ef4444";
-                                        }}
-                                        onMouseLeave={(e) => {
-                                          e.currentTarget.style.background =
-                                            "transparent";
-                                          e.currentTarget.style.color =
-                                            "#374151";
-                                        }}
-                                      >
-                                        <Trash2 size={16} />
-                                        Delete Task
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
+                            {/* Delete button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteTask(task._id);
+                              }}
+                              style={{
+                                background: "transparent",
+                                border: "none",
+                                color: "#64748b",
+                                cursor: "pointer",
+                                padding: "0.4rem",
+                                borderRadius: "0.5rem",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                transition: "all 0.2s",
+                              }}
+                              title="Delete task"
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = "#fef2f2";
+                                e.currentTarget.style.color = "#ef4444";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = "transparent";
+                                e.currentTarget.style.color = "#64748b";
+                              }}
+                            >
+                              <Trash2 size={16} />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -2195,7 +2012,8 @@ function App() {
                             style={{
                               background: "rgba(255, 255, 255, 0.2)",
                               border: "none",
-                              borderRadius: "50%",width: "20px",
+                              borderRadius: "50%",
+                              width: "20px",
                               height: "20px",
                               color: "#fff",
                               cursor: "pointer",
@@ -2229,7 +2047,7 @@ function App() {
                         height: "100%",
                       }}
                     >
-                      No tags selected. Click "Add Tags" to select tags.
+                      No tags selected. Click "+" to add tags.
                     </span>
                   )}
                 </div>
@@ -2398,8 +2216,7 @@ function App() {
                       fontWeight: 600,
                       fontSize: "1rem",
                     }}
-                  >
-                    Priority
+                  >Priority
                   </label>
                   <select
                     value={editingId ? editingPriority : newPriority}
