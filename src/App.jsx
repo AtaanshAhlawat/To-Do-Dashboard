@@ -1101,7 +1101,6 @@ function App() {
                 width: "100%",
                 background: "#fff",
                 borderRadius: "1rem",
-                overflow: "hidden",
                 boxShadow: "0 4px 24px rgba(0,0,0,0.05)",
                 overflowX: "auto",
               }}

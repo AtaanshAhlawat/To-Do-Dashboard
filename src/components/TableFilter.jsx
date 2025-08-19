@@ -23,9 +23,20 @@ const TableFilter = ({
       }
     };
 
+    const handleResize = () => {
+      if (showDropdown) {
+        setShowDropdown(false);
+      }
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [showDropdown]);
 
   const handleSort = (direction) => {
     onSort(column, direction);
@@ -95,17 +106,50 @@ const TableFilter = ({
       {showDropdown && (
         <div
           style={{
-            position: 'absolute',
-            top: '100%',
-            left: '0',
+            position: 'fixed',
+            top: 'auto',
+            left: 'auto',
             background: '#fff',
             border: '1px solid #e2e8f0',
             borderRadius: '8px',
             boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-            zIndex: 1000,
+            zIndex: 9999,
             minWidth: '200px',
             padding: '8px',
-            marginTop: '4px'
+            marginTop: '4px',
+            maxHeight: '400px',
+            overflowY: 'auto'
+          }}
+          ref={(el) => {
+            if (el) {
+              const buttonRect = dropdownRef.current?.getBoundingClientRect();
+              if (buttonRect) {
+                const spaceBelow = window.innerHeight - buttonRect.bottom;
+                const spaceAbove = buttonRect.top;
+                const dropdownHeight = Math.min(el.scrollHeight, 400); // Cap at 400px
+                
+                // Ensure minimum space
+                const minSpace = 20;
+                
+                // Position dropdown
+                if (spaceBelow >= dropdownHeight + minSpace || spaceBelow > spaceAbove) {
+                  // Show below
+                  el.style.top = `${buttonRect.bottom + 4}px`;
+                  el.style.left = `${buttonRect.left}px`;
+                } else {
+                  // Show above
+                  el.style.top = `${buttonRect.top - dropdownHeight - 4}px`;
+                  el.style.left = `${buttonRect.left}px`;
+                }
+                
+                // Ensure dropdown doesn't go off-screen horizontally
+                const dropdownWidth = el.offsetWidth;
+                const rightEdge = buttonRect.left + dropdownWidth;
+                if (rightEdge > window.innerWidth) {
+                  el.style.left = `${window.innerWidth - dropdownWidth - 10}px`;
+                }
+              }
+            }
           }}
         >
           {/* Sort Options */}
