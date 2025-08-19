@@ -16,6 +16,9 @@ export const useTaskStore = create(
       tags: [],
       taskStatus: {},
       taskPriorities: {},
+      // Filtering and sorting state
+      sortConfig: null, // { column: 'task', direction: 'asc' }
+      filters: {}, // { task: { type: 'text', value: 'search' }, status: { type: 'multiselect', selected: ['Pending'] } }
 
       loadTasks: async () => {
         set({ loading: true, error: null });
@@ -174,7 +177,157 @@ export const useTaskStore = create(
           tags: ["Personal", "Work", "Urgent"],
           taskStatus: {},
           taskPriorities: {},
+          sortConfig: null,
+          filters: {},
         }),
+
+      // Sorting functions
+      setSortConfig: (column, direction) => {
+        set({ sortConfig: { column, direction } });
+      },
+
+      clearSort: () => {
+        set({ sortConfig: null });
+      },
+
+      // Filtering functions
+      setFilter: (column, filterConfig) => {
+        set((state) => ({
+          filters: {
+            ...state.filters,
+            [column]: filterConfig
+          }
+        }));
+      },
+
+      clearFilter: (column) => {
+        set((state) => {
+          const newFilters = { ...state.filters };
+          delete newFilters[column];
+          return { filters: newFilters };
+        });
+      },
+
+      clearAllFilters: () => {
+        set({ filters: {}, sortConfig: null });
+      },
+
+      // Get filtered and sorted tasks
+      getFilteredAndSortedTasks: () => {
+        const { tasks, taskStatus, taskPriorities, filters, sortConfig } = get();
+        let filteredTasks = [...tasks];
+
+        // Apply filters
+        Object.entries(filters).forEach(([column, filterConfig]) => {
+          if (!filterConfig) return;
+
+          switch (column) {
+            case 'task':
+              if (filterConfig.type === 'text' && filterConfig.value) {
+                const searchTerm = filterConfig.value.toLowerCase();
+                filteredTasks = filteredTasks.filter(task =>
+                  task.text?.toLowerCase().includes(searchTerm) ||
+                  task.description?.toLowerCase().includes(searchTerm)
+                );
+              }
+              break;
+
+            case 'status':
+              if (filterConfig.type === 'multiselect' && filterConfig.selected?.length > 0) {
+                filteredTasks = filteredTasks.filter(task => {
+                  const status = taskStatus[task._id] || 'Pending';
+                  return filterConfig.selected.includes(status);
+                });
+              }
+              break;
+
+            case 'priority':
+              if (filterConfig.type === 'multiselect' && filterConfig.selected?.length > 0) {
+                filteredTasks = filteredTasks.filter(task => {
+                  const priority = taskPriorities[task._id] || task.priority || 'normal';
+                  return filterConfig.selected.includes(priority);
+                });
+              }
+              break;
+
+            case 'tags':
+              if (filterConfig.type === 'multiselect' && filterConfig.selected?.length > 0) {
+                filteredTasks = filteredTasks.filter(task => {
+                  const taskTags = Array.isArray(task.tags) ? task.tags : [];
+                  return filterConfig.selected.some(selectedTag => taskTags.includes(selectedTag));
+                });
+              }
+              break;
+
+            case 'created':
+              if (filterConfig.type === 'text' && filterConfig.value) {
+                const searchTerm = filterConfig.value.toLowerCase();
+                filteredTasks = filteredTasks.filter(task => {
+                  const date = new Date(task.created);
+                  const dateString = date.toLocaleDateString().toLowerCase();
+                  const timeString = date.toLocaleTimeString().toLowerCase();
+                  return dateString.includes(searchTerm) || timeString.includes(searchTerm);
+                });
+              }
+              break;
+          }
+        });
+
+        // Apply sorting
+        if (sortConfig) {
+          filteredTasks.sort((a, b) => {
+            let aValue, bValue;
+
+            switch (sortConfig.column) {
+              case 'task':
+                aValue = a.text?.toLowerCase() || '';
+                bValue = b.text?.toLowerCase() || '';
+                break;
+
+              case 'status':
+                const statusOrder = { 'Pending': 0, 'In Progress': 1, 'Completed': 2, 'Rejected': 3 };
+                aValue = statusOrder[taskStatus[a._id] || 'Pending'] ?? 0;
+                bValue = statusOrder[taskStatus[b._id] || 'Pending'] ?? 0;
+                break;
+
+              case 'priority':
+                const priorityOrder = { 'low': 0, 'normal': 1, 'high': 2 };
+                const aPriority = taskPriorities[a._id] || a.priority || 'normal';
+                const bPriority = taskPriorities[b._id] || b.priority || 'normal';
+                aValue = priorityOrder[aPriority] ?? 1;
+                bValue = priorityOrder[bPriority] ?? 1;
+                break;
+
+              case 'tags':
+                aValue = (Array.isArray(a.tags) ? a.tags : []).join(', ').toLowerCase();
+                bValue = (Array.isArray(b.tags) ? b.tags : []).join(', ').toLowerCase();
+                break;
+
+              case 'created':
+                aValue = new Date(a.created).getTime();
+                bValue = new Date(b.created).getTime();
+                break;
+
+              default:
+                return 0;
+            }
+
+            if (typeof aValue === 'string' && typeof bValue === 'string') {
+              return sortConfig.direction === 'asc' 
+                ? aValue.localeCompare(bValue)
+                : bValue.localeCompare(aValue);
+            }
+
+            if (sortConfig.direction === 'asc') {
+              return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+            } else {
+              return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+            }
+          });
+        }
+
+        return filteredTasks;
+      }
     }),
     {
       name: "task-storage",
@@ -183,6 +336,8 @@ export const useTaskStore = create(
         tags: state.tags,
         taskStatus: state.taskStatus,
         taskPriorities: state.taskPriorities,
+        sortConfig: state.sortConfig,
+        filters: state.filters,
       }),
     },
   ),
