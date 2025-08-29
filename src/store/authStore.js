@@ -39,8 +39,8 @@ export const useAuthStore = create(persist((set, get) => ({
   },
 
   // Logout action
-  logout: async () => {
-    await apiLogout();
+  logout: () => {
+    apiLogout();
     set({ user: null, token: null, refreshToken: null });
   },
 

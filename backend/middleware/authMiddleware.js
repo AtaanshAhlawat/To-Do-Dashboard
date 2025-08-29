@@ -16,11 +16,6 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ error: 'Invalid token. User not found.' });
     }
 
-    // Check if token version matches (for token invalidation)
-    if (decoded.tokenVersion !== undefined && decoded.tokenVersion !== user.tokenVersion) {
-      return res.status(401).json({ error: 'Token invalidated. Please login again.' });
-    }
-
     req.user = user;
     next();
   } catch (error) {
