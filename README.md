@@ -1,145 +1,167 @@
-# To-Do Dashboard
+# 📋 To-Do Dashboard
 
-A task management app I built with React, Node.js, and MongoDB. It handles authentication properly and includes some nice filtering features.
+A secure, full-stack task management application with enterprise-grade JWT authentication and real-time updates.
 
-## What it does
+## 🌟 Features
 
-- **Task management** - Create, edit, delete tasks with priorities and status
-- **Excel-like filtering** - Sort and filter tasks by any column
-- **User authentication** - JWT tokens with proper refresh handling
-- **Responsive design** - Works on desktop and mobile
-- **Real-time updates** - Changes sync immediately
+- 🔐 **Secure Authentication** - Enterprise-grade JWT with refresh token rotation
+- 📱 **Responsive Design** - Works seamlessly on desktop and mobile
+- ⚡ **Real-time Updates** - Instant task synchronization
+- 🛡️ **Security First** - Token versioning, revocation, and comprehensive protection
+- 🎨 **Modern UI** - Clean, intuitive interface built with React
+- 🚀 **Fast Performance** - Optimized with Vite and modern tooling
 
-## Security stuff
+## 🔒 Security Features
 
-- Refresh tokens rotate on each use
-- Server-side token invalidation on logout
-- Token versioning to invalidate all sessions instantly
-- Protected routes with proper validation
-- Password hashing with bcrypt
+- ✅ Refresh token rotation (new token on every use)
+- ✅ Server-side token revocation and invalidation
+- ✅ Token versioning for instant logout from all devices
+- ✅ Protected routes with comprehensive validation
+- ✅ Secure password hashing with bcrypt
+- ✅ Environment-based configuration management
 
-## Getting Started
+## 🚀 Quick Start
 
-### What you need
+### Prerequisites
 
-- Node.js (v14+)
-- MongoDB running locally
+- Node.js (v14 or higher)
+- MongoDB (v4.4 or higher)
 - npm or yarn
 
-### Setup
+### Installation
 
-1. **Clone and install:**
+1. **Clone the repository:**
 
    ```bash
-   git clone <your-repo-url>
+   git clone <repository-url>
    cd To-Do-Dashboard
+   ```
+
+2. **Install dependencies:**
+
+   ```bash
+   # Install frontend dependencies
    npm install
-   cd backend && npm install && cd ..
+
+   # Install backend dependencies
+   cd backend
+   npm install
+   cd ..
    ```
 
-2. **Environment setup:**
+3. **Set up environment variables:**
 
    ```bash
+   # Copy the environment template
    cp .env.example backend/.env
+
+   # Generate secure JWT secrets
+   openssl rand -base64 64  # Use for JWT_SECRET
+   openssl rand -base64 64  # Use for JWT_REFRESH_SECRET
+
+   # Edit backend/.env with your values
    ```
 
-3. **Generate secrets (important!):**
-
-   ```bash
-   openssl rand -base64 64  # JWT_SECRET
-   openssl rand -base64 64  # JWT_REFRESH_SECRET
-   ```
-
-4. **Edit backend/.env:**
+4. **Configure your environment:**
 
    ```env
+   # backend/.env
    NODE_ENV=development
    PORT=3001
    MONGODB_URI=mongodb://localhost:27017/todo-dashboard
-   JWT_SECRET=your_generated_secret_here
+   JWT_SECRET=your_generated_jwt_secret_here
    JWT_REFRESH_SECRET=your_generated_refresh_secret_here
    ```
 
-5. **Run it:**
+5. **Start the application:**
 
    ```bash
-   # Terminal 1 - Backend
-   cd backend && npm start
+   # Start backend (in one terminal)
+   cd backend
+   npm start
 
-   # Terminal 2 - Frontend
+   # Start frontend (in another terminal)
    npm run dev
    ```
 
-6. **Open:**
+6. **Access the application:**
    - Frontend: http://localhost:5173
-   - API: http://localhost:3001
+   - Backend API: http://localhost:3001
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 To-Do-Dashboard/
-├── backend/              # Express backend
-│   ├── middleware/      # Auth & error handling
-│   ├── models/         # MongoDB schemas
-│   ├── routes/         # API endpoints
-│   └── server.js       # Server entry
-├── src/                 # React frontend
-│   ├── components/     # Reusable components
-│   ├── store/         # Zustand state management
-│   ├── utils/         # Helper functions
-│   └── App.jsx        # Main app
-├── SECURITY.md         # Security notes
-└── README.md          # This file
+├── backend/                 # Express.js backend
+│   ├── middleware/         # Authentication & error handling
+│   ├── models/            # MongoDB schemas
+│   ├── routes/            # API routes
+│   └── server.js          # Server entry point
+├── src/                    # React frontend
+│   ├── components/        # Reusable components
+│   ├── store/            # Zustand state management
+│   ├── utils/            # Utility functions
+│   └── App.jsx           # Main application
+├── SECURITY.md            # Security documentation
+└── README.md             # This file
 ```
 
-## API Endpoints
+## 🔧 API Endpoints
 
-### Auth
+### Authentication
 
-- `POST /api/register` - Sign up
-- `POST /api/login` - Sign in
-- `POST /api/refresh` - Get new access token
-- `POST /api/logout` - Sign out
-- `POST /api/logout-all` - Sign out everywhere
-- `DELETE /api/delete-account` - Delete account
+- `POST /api/register` - User registration
+- `POST /api/login` - User login
+- `POST /api/refresh` - Refresh access token
+- `POST /api/logout` - Logout (invalidate refresh token)
+- `POST /api/logout-all` - Logout from all devices
+- `DELETE /api/delete-account` - Delete user account
 
 ### Tasks
 
-- `GET /api/tasks` - Get your tasks
-- `POST /api/tasks` - Create task
+- `GET /api/tasks` - Get user's tasks
+- `POST /api/tasks` - Create new task
 - `PATCH /api/tasks/:id` - Update task
 - `DELETE /api/tasks/:id` - Delete task
 
-## Security
+## 🛡️ Security
 
-I've implemented proper security practices:
+This application implements enterprise-grade security practices:
 
-- Refresh tokens rotate on each use
-- Token versioning to invalidate all sessions instantly
-- Server-side token invalidation
-- Input validation and sanitization
+- **Refresh Token Rotation**: New tokens generated on every refresh
+- **Token Versioning**: Ability to invalidate all user sessions instantly
+- **Secure Storage**: Recommendations for production token storage
+- **Strong Validation**: Comprehensive input validation and sanitization
 
-Check [SECURITY.md](./SECURITY.md) for more details.
+For detailed security information, see [SECURITY.md](./SECURITY.md).
 
-## Development
+## 🔨 Development
 
-### Tests
+### Running Tests
 
 ```bash
-cd backend && npm test
-npm test  # frontend
+# Backend tests
+cd backend
+npm test
+
+# Frontend tests
+npm test
 ```
 
-### Production build
+### Building for Production
 
 ```bash
+# Build frontend
 npm run build
-cd backend && npm run start:prod
+
+# Start production server
+cd backend
+npm run start:prod
 ```
 
-## Deployment
+## 🌐 Deployment
 
-### Production env vars
+### Environment Variables for Production
 
 ```env
 NODE_ENV=production
@@ -150,32 +172,33 @@ JWT_REFRESH_SECRET=your_super_secure_refresh_secret
 CORS_ORIGIN=https://your-domain.com
 ```
 
-### Production checklist
+### Security Checklist for Production
 
-- [ ] Use HTTPS
-- [ ] Set strong JWT secrets
-- [ ] Configure CORS properly
+- [ ] Use HTTPS only
+- [ ] Set strong, unique JWT secrets
+- [ ] Configure CORS for your domain
 - [ ] Enable rate limiting
-- [ ] Set up monitoring
-- [ ] Consider httpOnly cookies
+- [ ] Set up monitoring and logging
+- [ ] Consider using httpOnly cookies for tokens
 
-## Contributing
+## 🤝 Contributing
 
-1. Fork the repo
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add some amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open Pull Request
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## License
+## 📄 License
 
-MIT License - see [LICENSE](LICENSE) file.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Links
+## 🔗 Links
 
 - **Live Demo**: [https://AtaanshAhlawat.github.io/To-Do](https://AtaanshAhlawat.github.io/To-Do)
 - **Security Guide**: [SECURITY.md](./SECURITY.md)
+- **API Documentation**: Available in the `/api` endpoints
 
 ---
 
-Built with React, Node.js, and MongoDB
+Built with ❤️ using React, Node.js, and MongoDB
