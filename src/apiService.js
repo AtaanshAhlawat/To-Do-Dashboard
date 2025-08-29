@@ -75,15 +75,23 @@ export async function refreshToken() {
       method: 'POST',
       body: { refreshToken },
     });
-    setTokens(data.token, refreshToken);
+    // Store both new access token and new refresh token
+    setTokens(data.token, data.refreshToken);
     return data;
   } catch {
     clearTokens();
     return null;
   }
 }
-export function logout() {
-  clearTokens();
+export async function logout() {
+  try {
+    // Call server logout to invalidate refresh token
+    await apiFetch('/logout', { method: 'POST', auth: true });
+  } catch {
+    // Even if server call fails, clear local tokens
+  } finally {
+    clearTokens();
+  }
 }
 
 export async function deleteAccount() {
