@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Auth from "./Auth";
-import TableFilter from "./components/TableFilter";
 import {
   Trash2,
   Edit2,
@@ -61,18 +60,12 @@ function App() {
     loading: tasksLoading,
     tags,
     addTag: addTagToStore,
+  } = useTaskStore();
+  const {
     taskStatus,
     taskPriorities,
     updateTaskStatus: updateTaskStatusStore,
     updateTaskPriority: updateTaskPriorityStore,
-    // Filter and sort functions
-    sortConfig,
-    filters,
-    setSortConfig,
-    setFilter,
-    clearFilter,
-    clearAllFilters,
-    getFilteredAndSortedTasks,
   } = useTaskStore();
   const { setError: setUIError } = useUIStore();
 
@@ -480,10 +473,9 @@ function App() {
     setDragOverTask(null);
   };
 
-  // Get filtered and sorted tasks from the store
-  const filteredTasks = getFilteredAndSortedTasks()
+  const filteredTasks = tasks
     .filter((task) => {
-      // Apply legacy search filter for compatibility
+      // Apply search filter
       const searchMatch =
         search === "" ||
         task.text?.toLowerCase().includes(search.toLowerCase()) ||
@@ -492,7 +484,7 @@ function App() {
           tag.toLowerCase().includes(search.toLowerCase()),
         );
 
-      // Apply legacy tag filter for compatibility
+      // Apply tag filter
       const tagMatch =
         tagFilter.length === 0 ||
         (task.tags &&
@@ -501,47 +493,10 @@ function App() {
       return searchMatch && tagMatch;
     })
     .sort((a, b) => {
-      // Apply drag-and-drop ordering if no column sorting is active
-      if (!sortConfig) {
-        const indexA = taskOrder.indexOf(a._id);
-        const indexB = taskOrder.indexOf(b._id);
-        return indexA - indexB;
-      }
-      return 0; // Let the store handle sorting when column sorting is active
+      const indexA = taskOrder.indexOf(a._id);
+      const indexB = taskOrder.indexOf(b._id);
+      return indexA - indexB;
     });
-
-  // Filter options for different columns
-  const statusOptions = Object.values(TASK_STATUS).map(status => ({
-    value: status,
-    label: status,
-    color: STATUS_COLORS[status]
-  }));
-
-  const priorityOptions = [
-    { value: 'low', label: 'Low', color: '#16a34a' },
-    { value: 'normal', label: 'Normal', color: '#0369a1' },
-    { value: 'high', label: 'High', color: '#f59e0b' }
-  ];
-
-  const tagOptions = tags.map(tag => ({
-    value: tag,
-    label: tag,
-    color: null
-  }));
-
-  // Handle sort
-  const handleSort = (column, direction) => {
-    setSortConfig(column, direction);
-  };
-
-  // Handle filter
-  const handleFilter = (column, filterConfig) => {
-    if (filterConfig.value === '' && filterConfig.selected?.length === 0) {
-      clearFilter(column);
-    } else {
-      setFilter(column, filterConfig);
-    }
-  };
 
   // Color variables
   const blue = "#2563eb";
@@ -605,7 +560,7 @@ function App() {
             }}
           >
             {/* Search and Filter Controls */}
-            <div style={{ display: "flex", gap: "1rem", flex: 1, alignItems: "center" }}>
+            <div style={{ display: "flex", gap: "1rem", flex: 1 }}>
               <input
                 type="text"
                 placeholder="Search for task..."
@@ -622,40 +577,6 @@ function App() {
                   minWidth: "200px",
                 }}
               />
-              
-              {/* Clear All Filters Button */}
-              {(Object.keys(filters).length > 0 || sortConfig) && (
-                <button
-                  onClick={clearAllFilters}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem",
-                    background: "#fef2f2",
-                    color: "#dc2626",
-                    border: "2px solid #fecaca",
-                    borderRadius: "0.75rem",
-                    padding: "0.75rem 1rem",
-                    cursor: "pointer",
-                    fontSize: "0.9rem",
-                    fontWeight: "500",
-                    transition: "all 0.2s",
-                    whiteSpace: "nowrap",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.background = "#fee2e2";
-                    e.target.style.borderColor = "#fca5a5";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.background = "#fef2f2";
-                    e.target.style.borderColor = "#fecaca";
-                  }}
-                  title="Clear all filters and sorting"
-                >
-                  <X size={16} />
-                  Clear Filters
-                </button>
-              )}
               <div style={{ position: "relative" }} ref={tagFilterRef}>
                 <button
                   onClick={() => setShowTagFilter(!showTagFilter)}
@@ -1101,6 +1022,7 @@ function App() {
                 width: "100%",
                 background: "#fff",
                 borderRadius: "1rem",
+                overflow: "hidden",
                 boxShadow: "0 4px 24px rgba(0,0,0,0.05)",
                 overflowX: "auto",
               }}
@@ -1128,20 +1050,9 @@ function App() {
                         fontSize: "0.9rem",
                         textTransform: "uppercase",
                         letterSpacing: "0.05em",
-                        position: "relative",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        Task
-                        <TableFilter
-                          column="task"
-                          sortConfig={sortConfig}
-                          onSort={handleSort}
-                          filterConfig={filters.task}
-                          onFilter={handleFilter}
-                          filterType="text"
-                        />
-                      </div>
+                      Task
                     </th>
                     <th
                       style={{
@@ -1152,21 +1063,9 @@ function App() {
                         textTransform: "uppercase",
                         letterSpacing: "0.05em",
                         width: "120px",
-                        position: "relative",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        Priority
-                        <TableFilter
-                          column="priority"
-                          sortConfig={sortConfig}
-                          onSort={handleSort}
-                          filterConfig={filters.priority}
-                          onFilter={handleFilter}
-                          filterType="multiselect"
-                          filterOptions={priorityOptions}
-                        />
-                      </div>
+                      Priority
                     </th>
                     <th
                       style={{
@@ -1177,21 +1076,9 @@ function App() {
                         textTransform: "uppercase",
                         letterSpacing: "0.05em",
                         minWidth: "280px",
-                        position: "relative",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        Tags
-                        <TableFilter
-                          column="tags"
-                          sortConfig={sortConfig}
-                          onSort={handleSort}
-                          filterConfig={filters.tags}
-                          onFilter={handleFilter}
-                          filterType="multiselect"
-                          filterOptions={tagOptions}
-                        />
-                      </div>
+                      Tags
                     </th>
                     <th
                       style={{
@@ -1202,20 +1089,9 @@ function App() {
                         textTransform: "uppercase",
                         letterSpacing: "0.05em",
                         width: "160px",
-                        position: "relative",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        Created
-                        <TableFilter
-                          column="created"
-                          sortConfig={sortConfig}
-                          onSort={handleSort}
-                          filterConfig={filters.created}
-                          onFilter={handleFilter}
-                          filterType="text"
-                        />
-                      </div>
+                      Created
                     </th>
                     <th
                       style={{
@@ -1226,21 +1102,9 @@ function App() {
                         textTransform: "uppercase",
                         letterSpacing: "0.05em",
                         minWidth: "140px",
-                        position: "relative",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        Status
-                        <TableFilter
-                          column="status"
-                          sortConfig={sortConfig}
-                          onSort={handleSort}
-                          filterConfig={filters.status}
-                          onFilter={handleFilter}
-                          filterType="multiselect"
-                          filterOptions={statusOptions}
-                        />
-                      </div>
+                      Status
                     </th>
                     <th
                       style={{
