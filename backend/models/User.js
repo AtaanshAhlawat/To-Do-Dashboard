@@ -2,29 +2,35 @@ const mongoose = require('mongoose');
 const crypto = require('crypto');
 
 // Encryption configuration for refresh tokens
-const ENCRYPTION_KEY = process.env.REFRESH_TOKEN_ENCRYPTION_KEY || crypto.randomBytes(32);
+// FIXED: Use proper key format for createCipheriv/createDecipheriv
+const ENCRYPTION_KEY = process.env.REFRESH_TOKEN_ENCRYPTION_KEY 
+  ? Buffer.from(process.env.REFRESH_TOKEN_ENCRYPTION_KEY, 'hex')
+  : crypto.randomBytes(32);
 const IV_LENGTH = 16; // For AES, this is always 16
+const ALGORITHM = 'aes-256-cbc';
 
 // Utility functions for token encryption/decryption
+// FIXED: Replace deprecated createCipher with createCipheriv
 const encryptToken = (token) => {
   const iv = crypto.randomBytes(IV_LENGTH);
-  const cipher = crypto.createCipher('aes-256-cbc', ENCRYPTION_KEY);
+  const cipher = crypto.createCipheriv(ALGORITHM, ENCRYPTION_KEY, iv);
   let encrypted = cipher.update(token, 'utf8', 'hex');
   encrypted += cipher.final('hex');
   return iv.toString('hex') + ':' + encrypted;
 };
 
+// FIXED: Replace deprecated createDecipher with createDecipheriv
 const decryptToken = (encryptedToken) => {
   try {
     const textParts = encryptedToken.split(':');
-    const _iv = Buffer.from(textParts.shift(), 'hex');
+    const iv = Buffer.from(textParts.shift(), 'hex');
     const encryptedText = textParts.join(':');
-    const decipher = crypto.createDecipher('aes-256-cbc', ENCRYPTION_KEY);
+    const decipher = crypto.createDecipheriv(ALGORITHM, ENCRYPTION_KEY, iv);
     let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
     return decrypted;
   } catch (error) {
-    console.error('Token decryption failed:', error);
+    console.error('Token decryption error:', error.message);
     return null;
   }
 };
@@ -36,23 +42,48 @@ const UserSchema = new mongoose.Schema({
     unique: true,
     trim: true,
     minlength: 3,
-    maxlength: 30
+    maxlength: 50
   },
   password: { 
     type: String, 
-    required: true 
+    required: true,
+    minlength: 6
+  },
+  role: { 
+    type: String, 
+    enum: ['user', 'admin', 'moderator'],
+    default: 'user' 
   },
   refreshTokens: [{
-    tokenHash: { type: String, required: true }, // Store hash instead of encrypted token
-    encryptedToken: { type: String, required: true }, // Encrypted token for validation
-    expiresAt: { type: Date, required: true },
-    createdAt: { type: Date, default: Date.now },
-    deviceInfo: { type: String },
-    ipAddress: { type: String },
-    lastUsed: { type: Date, default: Date.now },
-    isActive: { type: Boolean, default: true }
+    tokenHash: { 
+      type: String, 
+      required: true 
+    },
+    encryptedToken: { 
+      type: String, 
+      required: true 
+    },
+    expiresAt: { 
+      type: Date, 
+      required: true 
+    },
+    deviceInfo: { 
+      type: String, 
+      default: '' 
+    },
+    ipAddress: { 
+      type: String, 
+      default: '' 
+    },
+    isActive: {
+      type: Boolean,
+      default: true
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
   }],
-  lastLogin: { type: Date },
   loginAttempts: { type: Number, default: 0 },
   lockUntil: { type: Date }
 }, {
@@ -79,89 +110,102 @@ UserSchema.methods.addRefreshToken = function(token, deviceInfo = '', ipAddress 
     expiresAt,
     deviceInfo,
     ipAddress,
-    lastUsed: new Date(),
-    isActive: true
+    isActive: true,
+    createdAt: new Date()
   });
   
-  // Keep only the 5 most recent tokens
-  if (this.refreshTokens.length > 5) {
-    this.refreshTokens = this.refreshTokens
-      .sort((a, b) => b.createdAt - a.createdAt)
-      .slice(0, 5);
-  }
-  
   return this.save();
 };
 
-// Method to validate refresh token with enhanced security
-UserSchema.methods.validateRefreshToken = function(token) {
+// Method to verify and retrieve refresh token
+UserSchema.methods.verifyRefreshToken = function(token) {
   const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
-  const tokenData = this.refreshTokens.find(rt => 
-    rt.tokenHash === tokenHash && rt.isActive
+  
+  // Find matching active token
+  const tokenDoc = this.refreshTokens.find(
+    rt => rt.tokenHash === tokenHash && 
+          rt.isActive && 
+          new Date() < rt.expiresAt
   );
   
-  if (!tokenData) return false;
-  
-  // Check if token is expired
-  if (new Date() > tokenData.expiresAt) {
-    // Mark token as inactive instead of removing
-    tokenData.isActive = false;
-    this.save();
-    return false;
+  if (!tokenDoc) {
+    return null;
   }
   
-  // Verify encrypted token matches
-  const decryptedToken = decryptToken(tokenData.encryptedToken);
-  if (decryptedToken !== token) {
-    console.warn('Token validation failed: decrypted token mismatch');
-    return false;
+  // Decrypt and verify token matches
+  const decryptedToken = decryptToken(tokenDoc.encryptedToken);
+  if (decryptedToken === token) {
+    return tokenDoc;
   }
   
-  // Update last used timestamp
-  tokenData.lastUsed = new Date();
-  this.save();
-  
-  return true;
+  return null;
 };
 
-// Method to remove refresh token securely
+// Method to remove specific refresh token (logout)
 UserSchema.methods.removeRefreshToken = function(token) {
   const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
-  const tokenData = this.refreshTokens.find(rt => rt.tokenHash === tokenHash);
   
-  if (tokenData) {
-    tokenData.isActive = false;
+  // Mark token as inactive instead of removing
+  const tokenDoc = this.refreshTokens.find(
+    rt => rt.tokenHash === tokenHash && rt.isActive
+  );
+  
+  if (tokenDoc) {
+    tokenDoc.isActive = false;
+    return this.save();
   }
   
-  return this.save();
+  return Promise.resolve(this);
 };
 
-// Method to clear all refresh tokens
-UserSchema.methods.clearAllRefreshTokens = function() {
+// Method to remove all refresh tokens (logout from all devices)
+UserSchema.methods.removeAllRefreshTokens = function() {
   this.refreshTokens.forEach(rt => {
     rt.isActive = false;
   });
   return this.save();
 };
 
-// Method to get active refresh tokens (for session management)
-UserSchema.methods.getActiveSessions = function() {
-  return this.refreshTokens
-    .filter(rt => rt.isActive && new Date() <= rt.expiresAt)
-    .map(rt => ({
-      deviceInfo: rt.deviceInfo,
-      ipAddress: rt.ipAddress,
-      createdAt: rt.createdAt,
-      lastUsed: rt.lastUsed,
-      expiresAt: rt.expiresAt
-    }));
+// Method to increment login attempts
+UserSchema.methods.incrementLoginAttempts = function() {
+  // If we have a previous lock that has expired, restart at 1
+  if (this.lockUntil && this.lockUntil < Date.now()) {
+    return this.updateOne({
+      $set: { loginAttempts: 1 },
+      $unset: { lockUntil: 1 }
+    });
+  }
+  
+  // Otherwise increment
+  const updates = { $inc: { loginAttempts: 1 } };
+  const maxAttempts = 5;
+  const lockTime = 2 * 60 * 60 * 1000; // 2 hours
+  
+  // Lock the account if we've reached max attempts
+  if (this.loginAttempts + 1 >= maxAttempts && !this.isLocked) {
+    updates.$set = { lockUntil: Date.now() + lockTime };
+  }
+  
+  return this.updateOne(updates);
 };
 
-// Method to revoke specific session
-UserSchema.methods.revokeSession = function(deviceInfo, ipAddress) {
-  const session = this.refreshTokens.find(rt => 
-    rt.deviceInfo === deviceInfo && 
-    rt.ipAddress === ipAddress && 
+// Virtual for checking if account is locked
+UserSchema.virtual('isLocked').get(function() {
+  return !!(this.lockUntil && this.lockUntil > Date.now());
+});
+
+// Method to reset login attempts
+UserSchema.methods.resetLoginAttempts = function() {
+  return this.updateOne({
+    $set: { loginAttempts: 0 },
+    $unset: { lockUntil: 1 }
+  });
+};
+
+// Method to revoke a specific session/token by device info
+UserSchema.methods.revokeSession = function(deviceInfo) {
+  const session = this.refreshTokens.find(
+    rt => rt.deviceInfo === deviceInfo && 
     rt.isActive
   );
   

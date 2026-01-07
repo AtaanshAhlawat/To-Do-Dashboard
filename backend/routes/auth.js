@@ -25,26 +25,31 @@ router.post("/register", async (req, res, next) => {
       return res.status(400).json({ error: "Missing fields" });
     }
     
+    // Validate username and password
+    if (username.length < 3 || username.length > 50) {
+      return res.status(400).json({ error: "Username must be between 3 and 50 characters" });
+    }
+    
     if (password.length < 6) {
       return res.status(400).json({ error: "Password must be at least 6 characters" });
     }
-    
-    const existingUser = await User.findOne({ username });
-    if (existingUser) {
+
+    const exists = await User.findOne({ username });
+    if (exists) {
       return res.status(400).json({ error: "User already exists" });
     }
-    
-    const hash = await bcrypt.hash(password, 12); // Increased salt rounds
-    const user = new User({ username, password: hash });
+
+    const hashed = await bcrypt.hash(password, 10);
+    const user = new User({ username, password: hashed });
     await user.save();
-    
-    res.json({ message: "User registered successfully" });
+
+    res.status(201).json({ message: "User registered successfully" });
   } catch (err) {
     next(err);
   }
 });
 
-// Login
+// Login - FIXED: Use User model methods for login attempts
 router.post("/login", async (req, res, next) => {
   try {
     const { username, password } = req.body;
@@ -54,32 +59,22 @@ router.post("/login", async (req, res, next) => {
       return res.status(400).json({ error: "Invalid credentials" });
     }
     
-    // Check if account is locked
-    if (user.lockUntil && user.lockUntil > Date.now()) {
+    // Check if account is locked using virtual property
+    if (user.isLocked) {
       return res.status(423).json({ 
-        error: "Account is temporarily locked. Please try again later." 
+        error: "Account is temporarily locked due to too many failed login attempts. Please try again later." 
       });
     }
     
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
-      // Increment login attempts
-      user.loginAttempts = (user.loginAttempts || 0) + 1;
-      
-      // Lock account after 5 failed attempts for 15 minutes
-      if (user.loginAttempts >= 5) {
-        user.lockUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-      }
-      
-      await user.save();
+      // FIXED: Use incrementLoginAttempts method from User model
+      await user.incrementLoginAttempts();
       return res.status(400).json({ error: "Invalid credentials" });
     }
     
-    // Reset login attempts on successful login
-    user.loginAttempts = 0;
-    user.lockUntil = null;
-    user.lastLogin = new Date();
-    await user.save();
+    // FIXED: Use resetLoginAttempts method from User model
+    await user.resetLoginAttempts();
     
     // Generate tokens
     const token = jwt.sign({ userId: user._id }, JWT_SECRET, {
@@ -97,54 +92,6 @@ router.post("/login", async (req, res, next) => {
       token, 
       refreshToken,
       user: { username: user.username }
-    });
-  } catch (err) {
-    next(err);
-  }
-});
-
-// Refresh token with rotation
-router.post("/refresh", async (req, res, next) => {
-  try {
-    const { refreshToken } = req.body;
-    
-    if (!refreshToken) {
-      return res.status(401).json({ error: "No refresh token provided" });
-    }
-    
-    // Find user by refresh token hash
-    const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
-    const user = await User.findOne({
-      'refreshTokens.tokenHash': tokenHash,
-      'refreshTokens.isActive': true
-    });
-    
-    if (!user) {
-      return res.status(403).json({ error: "Invalid refresh token" });
-    }
-    
-    // Validate refresh token
-    if (!user.validateRefreshToken(refreshToken)) {
-      return res.status(403).json({ error: "Refresh token expired or invalid" });
-    }
-    
-    // Generate new tokens
-    const newToken = jwt.sign({ userId: user._id }, JWT_SECRET, {
-      expiresIn: "15m",
-    });
-    
-    const newRefreshToken = generateRefreshToken();
-    
-    // Remove old refresh token and add new one (token rotation)
-    await user.removeRefreshToken(refreshToken);
-    
-    const deviceInfo = req.headers['user-agent'] || 'Unknown';
-    const ipAddress = req.ip || req.connection.remoteAddress;
-    await user.addRefreshToken(newRefreshToken, deviceInfo, ipAddress);
-    
-    res.json({ 
-      token: newToken,
-      refreshToken: newRefreshToken
     });
   } catch (err) {
     next(err);
@@ -181,49 +128,98 @@ router.post("/logout", async (req, res, next) => {
   }
 });
 
-// Logout from all devices
-router.post("/logout-all", async (req, res, next) => {
+// Refresh token endpoint
+router.post("/refresh", async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
+    const { refreshToken } = req.body;
     
-    // Blacklist current access token
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const accessToken = authHeader.substring(7);
-      blacklistToken(accessToken);
-      
-      // Get user from token
-      const decoded = jwt.verify(accessToken, JWT_SECRET);
-      const user = await User.findById(decoded.userId);
-      
-      if (user) {
-        await user.clearAllRefreshTokens();
-      }
+    if (!refreshToken) {
+      return res.status(401).json({ error: "Refresh token required" });
     }
     
-    res.json({ message: "Logged out from all devices" });
+    // Hash the token to find the user
+    const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+    const user = await User.findOne({
+      'refreshTokens.tokenHash': tokenHash
+    });
+    
+    if (!user) {
+      return res.status(401).json({ error: "Invalid refresh token" });
+    }
+    
+    // Verify refresh token using User model method
+    const tokenDoc = user.verifyRefreshToken(refreshToken);
+    
+    if (!tokenDoc) {
+      return res.status(401).json({ error: "Invalid or expired refresh token" });
+    }
+    
+    // Generate new access token
+    const token = jwt.sign({ userId: user._id }, JWT_SECRET, {
+      expiresIn: "15m",
+    });
+    
+    res.json({ token });
   } catch (err) {
     next(err);
   }
 });
 
-// Get active sessions
-router.get("/sessions", async (req, res, next) => {
+// Get current user info
+router.get("/me", authMiddleware, async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Access denied. No token provided.' });
-    }
-
-    const token = authHeader.substring(7);
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const user = await User.findById(decoded.userId);
+    const user = await User.findById(req.user._id).select('-password -refreshTokens');
     
     if (!user) {
-      return res.status(401).json({ error: 'Invalid token. User not found.' });
+      return res.status(404).json({ error: "User not found" });
     }
     
-    const sessions = user.getActiveSessions();
-    res.json({ sessions });
+    res.json({ 
+      user: {
+        id: user._id,
+        username: user.username,
+        role: user.role,
+        createdAt: user.createdAt
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Change password
+router.post("/change-password", authMiddleware, async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: "Both current and new password are required" });
+    }
+    
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: "New password must be at least 6 characters" });
+    }
+    
+    const user = await User.findById(req.user._id);
+    
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    
+    // Verify current password
+    const valid = await bcrypt.compare(currentPassword, user.password);
+    if (!valid) {
+      return res.status(400).json({ error: "Current password is incorrect" });
+    }
+    
+    // Hash and save new password
+    user.password = await bcrypt.hash(newPassword, 10);
+    await user.save();
+    
+    // Optionally, revoke all refresh tokens for security
+    await user.removeAllRefreshTokens();
+    
+    res.json({ message: "Password changed successfully" });
   } catch (err) {
     next(err);
   }

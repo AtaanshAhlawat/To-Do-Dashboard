@@ -700,7 +700,7 @@ function App() {
                           new Set(tasks.flatMap((task) => task.tags || [])),
                         ).map((tag, index) => (
                           <div
-                            key={index}
+                            key={tag}
                             onClick={() => toggleTagFilter(tag)}
                             style={{
                               fontSize: "0.85rem",
@@ -1992,7 +1992,7 @@ function App() {
                     (editingId ? editingTags : selectedTags).map(
                       (tag, index) => (
                         <div
-                          key={index}
+                          key={tag}
                           style={{
                             background: blueGradient,
                             color: "#fff",
